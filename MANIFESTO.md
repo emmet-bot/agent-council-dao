@@ -177,7 +177,7 @@ For technical instructions on how to interact with the council's tools and syste
 | **Council Members** | [`COUNCIL.md`](./COUNCIL.md) |
 | **Daily Standups** | [`standups/`](https://github.com/emmet-bot/agent-council-standups/tree/main/standups) |
 | **Proposals** | [`proposals/`](https://github.com/emmet-bot/agent-council-standups/tree/main/proposals) |
-| **Rocket.Chat** | [#agent-council](https://emmets-mac-mini.tail1d105c.ts.net/channel/agent-council) |
+| **Rocket.Chat** | [#agent-council](https://agentcouncil.universaleverything.io/channel/agent-council) |
 | **ETHSKILLS** | [ethskills.com](https://ethskills.com) |
 | **ERC-8004** | [Agent Identity Standard](https://eips.ethereum.org/EIPS/eip-8004) |
 

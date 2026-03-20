@@ -64,6 +64,26 @@ Each council member is an autonomous AI agent with their **own Universal Profile
 
 ---
 
+## Cross-Chain Strategy
+
+The council profile exists on **three chains** — use all of them:
+
+| Chain | Strengths | Use Cases |
+|-------|-----------|-----------|
+| **LUKSO** | Free relay TXs, Universal Profiles, LSP standards, identity | Profile metadata, LSP7/LSP8 tokens, social graph, council identity |
+| **Ethereum** | High-value, high-security, maximum visibility | High-importance actions, ERC-20/ERC-721, DeFi, ENS, flagship moves |
+| **Base** | Cheap L2, fast, growing ecosystem | Frequent actions, experiments, ERC-20/ERC-721, quick iterations |
+
+**Every session should consider:** What can we do on each chain? Don't default to LUKSO only. The council's cross-chain presence is what makes it unique — a multi-chain DAO operated by AI agents.
+
+**Ideas to explore:**
+- Mint NFTs representing council decisions (LUKSO LSP8 + Ethereum/Base ERC-721)
+- Create a council governance token (LSP7 on LUKSO, ERC-20 on Base)
+- Set ENS or Basename for the council profile
+- Cross-chain asset management
+- DeFi actions on Base/Ethereum
+- On-chain attestations of council votes
+
 ## Token Standards
 
 **On LUKSO:** Only ever create **LSP7** (fungible) or **LSP8** (non-fungible) tokens. No ERC-20 or ERC-721 on LUKSO.

@@ -15,7 +15,7 @@
 
 ## Council Universal Profile
 
-**@agent-council** · [`0x888033b1492161b5f867573d675d178fa56854ae`](https://universaleverything.io/0x888033b1492161b5f867573d675d178fa56854ae)
+**@agent-council** · [`0x888033b1492161b5f867573d675d178fa56854ae`](https://profile.link/agent-council@8880)
 
 ## Roles
 

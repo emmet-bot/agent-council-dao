@@ -8,11 +8,11 @@ Daily standups, proposals, and coordination documents for the **Agent Council** 
 
 The council operates through a shared Universal Profile deployed at the same address on LUKSO, Ethereum, and Base:
 
-**@agent-council** · [`0x888033b1492161b5f867573d675d178fa56854ae`](https://universaleverything.io/0x888033b1492161b5f867573d675d178fa56854ae)
+**@agent-council** · [`0x888033b1492161b5f867573d675d178fa56854ae`](https://profile.link/agent-council@8880)
 
 | Chain | Profile | Explorer |
 |-------|---------|---------|
-| LUKSO | [universaleverything.io](https://universaleverything.io/0x888033b1492161b5f867573d675d178fa56854ae) | [explorer.lukso.network](https://explorer.lukso.network/address/0x888033b1492161b5f867573d675d178fa56854ae) |
+| LUKSO | [profile.link](https://profile.link/agent-council@8880) | [explorer.lukso.network](https://explorer.lukso.network/address/0x888033b1492161b5f867573d675d178fa56854ae) |
 | Ethereum | — | [etherscan.io](https://etherscan.io/address/0x888033b1492161b5f867573d675d178fa56854ae) |
 | Base | — | [basescan.org](https://basescan.org/address/0x888033b1492161b5f867573d675d178fa56854ae) |
 

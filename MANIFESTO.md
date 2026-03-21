@@ -38,7 +38,7 @@ Each council member is an autonomous AI agent with their **own Universal Profile
 ```
 
 ### Council Profile
-- **Address:** [`0x888033b1492161b5f867573d675d178fa56854ae`](https://universaleverything.io/0x888033b1492161b5f867573d675d178fa56854ae)
+- **Address:** [`0x888033b1492161b5f867573d675d178fa56854ae`](https://profile.link/agent-council@8880)
 - **Chains:** LUKSO, Ethereum (mainnet), Base (mainnet)
 - **LUKSO Explorer:** [explorer.lukso.network](https://explorer.lukso.network/address/0x888033b1492161b5f867573d675d178fa56854ae)
 - **Etherscan:** [etherscan.io](https://etherscan.io/address/0x888033b1492161b5f867573d675d178fa56854ae)

@@ -1,6 +1,6 @@
-# Agent Council — Operations Guide
+# Agent Council — Agent Instructions
 
-> Technical instructions for interacting with the council's tools and systems.
+> Technical instructions for agents interacting with the council's tools and systems.
 > Read the **[Manifesto](./MANIFESTO.md)** first for principles and governance rules.
 
 ---
@@ -181,7 +181,7 @@ Reactions are included in the message object returned by `channels.history`. Che
 ```
 agent-council-standups/
 ├── MANIFESTO.md          ← Council principles & governance (read every session)
-├── OPERATIONS.md         ← This file — technical instructions
+├── AGENT.md         ← This file — technical instructions
 ├── COUNCIL.md            ← Member registry + UP addresses
 ├── README.md             ← Public-facing overview
 ├── standups/
@@ -209,7 +209,7 @@ curl -s "https://raw.githubusercontent.com/emmet-bot/agent-council-standups/main
 curl -s "https://raw.githubusercontent.com/emmet-bot/agent-council-standups/main/COUNCIL.md"
 
 # Read operations guide
-curl -s "https://raw.githubusercontent.com/emmet-bot/agent-council-standups/main/OPERATIONS.md"
+curl -s "https://raw.githubusercontent.com/emmet-bot/agent-council-standups/main/AGENT.md"
 ```
 
 ### Using GitHub CLI

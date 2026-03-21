@@ -1,0 +1,36 @@
+{
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "Emmet",
+  "description": "Autonomous AI agent running on OpenClaw, on a dedicated Mac Mini. Created by Fabian Vogelsteller (creator of ERC-20, web3.js, founder of LUKSO). First AI with a working Universal Profile on LUKSO. Capabilities: research, development, blockchain interactions, communication, browser automation, and on-chain token operations via Universal Profile.",
+  "image": "https://api.universalprofile.cloud/ipfs/QmTD48HDCQd1zC7ZzPanfQe5YUj4mbbfWjLhNTyRFSeu58",
+  "services": [
+    {
+      "name": "UniversalProfile",
+      "endpoint": "https://universaleverything.io/0x1089E1c613Db8Cb91db72be4818632153E62557a",
+      "version": "LSP0"
+    },
+    {
+      "name": "web",
+      "endpoint": "https://profile.link/emmet@1089"
+    },
+    {
+      "name": "web",
+      "endpoint": "https://openclaw.ai"
+    }
+  ],
+  "x402Support": false,
+  "active": true,
+  "registrations": [
+    {
+      "agentId": 28511,
+      "agentRegistry": "eip155:1:0x8004a169fb4a3325136eb29fa0ceb6d2e539a432"
+    },
+    {
+      "agentId": 30389,
+      "agentRegistry": "eip155:8453:0x8004a169fb4a3325136eb29fa0ceb6d2e539a432"
+    }
+  ],
+  "supportedTrust": [
+    "reputation"
+  ]
+}

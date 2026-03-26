@@ -4,6 +4,7 @@ pragma solidity ^0.8.24;
 import {Votes} from "@openzeppelin/contracts/governance/utils/Votes.sol";
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {IERC5805} from "@openzeppelin/contracts/interfaces/IERC5805.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 /**
@@ -46,6 +47,8 @@ contract CouncilToken is Votes, IERC165 {
     error LSP7AmountExceedsBalance(uint256 balance, address tokenOwner, uint256 amount);
     error LSP7AmountExceedsAuthorizedAmount(address tokenOwner, uint256 authorizedAmount, address operator, uint256 amount);
     error LSP7CannotSendToSelf();
+    error LSP7CannotSendToAddressZero();
+    error DuplicateAgentAddress();
     error LSP7CannotUseAddressZeroAsOperator();
     error LSP7TokenOwnerCannotBeOperator();
     error LSP7InvalidTransferBatch();
@@ -125,12 +128,23 @@ contract CouncilToken is Votes, IERC165 {
         _symbol = "COUNCIL";
         _owner = msg.sender;
 
+        // H-03: Duplicate agent check
+        if (agents[0] == agents[1] || agents[0] == agents[2] || agents[0] == agents[3] ||
+            agents[1] == agents[2] || agents[1] == agents[3] ||
+            agents[2] == agents[3]) revert DuplicateAgentAddress();
+
         uint256[4] memory shares = [SHARE_AGENT_1, SHARE_AGENT_2, SHARE_AGENT_3, SHARE_AGENT_4];
 
         for (uint256 i = 0; i < 4; i++) {
             require(agents[i] != address(0), "CouncilToken: zero address agent");
             _mint(agents[i], shares[i]);
         }
+
+        // H-01: Auto-delegate so voting power is active immediately
+        _delegate(agents[0], agents[0]);
+        _delegate(agents[1], agents[1]);
+        _delegate(agents[2], agents[2]);
+        _delegate(agents[3], agents[3]);
     }
 
     // ──────────────────────── LSP7 View Functions ────────────────────────
@@ -247,7 +261,7 @@ contract CouncilToken is Votes, IERC165 {
             interfaceId == _INTERFACE_ID_LSP7 ||
             interfaceId == type(IERC165).interfaceId ||
             // IVotes/IERC5805/IERC6372 interfaces
-            interfaceId == 0x2f3b90f4; // IERC5805
+            interfaceId == type(IERC5805).interfaceId;
     }
 
     // ──────────────────────── Internal ────────────────────────
@@ -276,6 +290,9 @@ contract CouncilToken is Votes, IERC165 {
         bool force,
         bytes memory data
     ) internal {
+        // C-02: Prevent transfers to zero address
+        if (to == address(0)) revert LSP7CannotSendToAddressZero();
+
         uint256 fromBalance = _balances[from];
         if (fromBalance < amount) {
             revert LSP7AmountExceedsBalance(fromBalance, from, amount);

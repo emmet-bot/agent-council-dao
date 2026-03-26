@@ -12,12 +12,15 @@ import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
 
 /**
  * @title CouncilGovernor
- * @notice On-chain governance for the Agent Council (P9).
+ * @notice On-chain governance for the Agent Council (P11 — LSP7 migration).
  *
  *  Voting delay:         1 block
- *  Voting period:        50400 blocks (~7 days on LUKSO at 12s/block)
+ *  Voting period:        21600 blocks (~3 days on LUKSO at 12s/block)
  *  Proposal threshold:   1e18 (1 COUNCIL token)
  *  Quorum:               10% of total supply
+ *
+ *  Uses LSP7-compatible CouncilToken which implements IVotes/IERC5805
+ *  via OZ v5 Votes base, making it fully compatible with GovernorVotes.
  */
 contract CouncilGovernor is
     Governor,
@@ -32,7 +35,7 @@ contract CouncilGovernor is
         TimelockController timelock_
     )
         Governor("AgentCouncilGovernor")
-        GovernorSettings(1, 50400, 1e18) // votingDelay, votingPeriod, proposalThreshold
+        GovernorSettings(1, 21600, 1e18) // votingDelay=1, votingPeriod=21600, proposalThreshold=1e18
         GovernorVotes(token_)
         GovernorVotesQuorumFraction(10) // 10%
         GovernorTimelockControl(timelock_)

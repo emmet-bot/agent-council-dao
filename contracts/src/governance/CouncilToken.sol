@@ -1,60 +1,274 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
-import {ERC20Votes} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Votes.sol";
-import {Nonces} from "@openzeppelin/contracts/utils/Nonces.sol";
+import {Votes} from "@openzeppelin/contracts/governance/utils/Votes.sol";
+import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
+import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 /**
  * @title CouncilToken
- * @notice ERC20 governance token for the Agent Council (P9).
+ * @notice LSP7-compatible governance token for the Agent Council.
  *
  *  Name:    "Agent Council Token"
  *  Symbol:  "COUNCIL"
- *  Supply:  1,000,000 (18 decimals) — fully minted at deploy, split equally
- *           among four council agent addresses.
+ *  Supply:  1,000,000 (18 decimals) — skewed distribution:
+ *           40% agent1, 30% agent2, 20% agent3, 10% agent4
  *
- *  Voting weight uses OpenZeppelin ERC20Votes (checkpoint-based).
+ *  This contract implements a minimal LSP7-style digital asset interface
+ *  (transfer with `force` + `data` parameters, `authorizeOperator`, `revokeOperator`)
+ *  combined with OZ v5 Votes for IVotes/IERC5805 compatibility with OZ Governor.
  *
- * @dev LSP7VotesInitAbstract does not exist in the current lsp-smart-contracts
- *      library, so this contract uses the standard OZ ERC20Votes base.
- *      If/when a LUKSO-native voting-weight LSP7 becomes available, a wrapper
- *      or migration path can be added.
+ *  The token uses OZ v5's Votes base for checkpoint-based voting power tracking,
+ *  making it fully compatible with GovernorVotes while providing LSP7-style
+ *  transfer semantics suitable for LUKSO Universal Profiles.
+ *
+ * @dev Key design decisions:
+ *  - Extends OZ Votes (which implements IERC5805/IVotes) for Governor compatibility
+ *  - Implements LSP7-style transfer(from, to, amount, force, data) interface
+ *  - Uses operator model (authorizeOperator/revokeOperator) instead of ERC20 approve
+ *  - Non-divisible: false (18 decimals)
+ *  - LSP4 token type: 0 (Token)
+ *  - Supports ERC165 interface detection for LSP7 interface ID
  */
-contract CouncilToken is ERC20, ERC20Permit, ERC20Votes {
-    uint256 public constant TOTAL_SUPPLY = 1_000_000 ether; // 18 decimals
-    uint256 public constant SHARE_PER_AGENT = TOTAL_SUPPLY / 4;
+contract CouncilToken is Votes, IERC165 {
+    // ──────────────────────── Errors ────────────────────────
+
+    error LSP7AmountExceedsBalance(uint256 balance, address tokenOwner, uint256 amount);
+    error LSP7AmountExceedsAuthorizedAmount(address tokenOwner, uint256 authorizedAmount, address operator, uint256 amount);
+    error LSP7CannotSendToSelf();
+    error LSP7CannotUseAddressZeroAsOperator();
+    error LSP7TokenOwnerCannotBeOperator();
+    error LSP7InvalidTransferBatch();
+    error LSP7NotifyTokenReceiverContractMissingLSP1Interface(address to);
+    error LSP7NotifyTokenReceiverIsEOA(address to);
+    error OwnableCallerNotTheOwner(address caller);
+    error LSP7ExceededSafeSupply(uint256 supply, uint256 cap);
+
+    // ──────────────────────── Events ────────────────────────
+
+    event Transfer(
+        address indexed operator,
+        address indexed from,
+        address indexed to,
+        uint256 amount,
+        bool force,
+        bytes data
+    );
+
+    event OperatorAuthorizationChanged(
+        address indexed operator,
+        address indexed tokenOwner,
+        uint256 indexed amount,
+        bytes operatorNotificationData
+    );
+
+    event OperatorRevoked(
+        address indexed operator,
+        address indexed tokenOwner,
+        bool indexed notified,
+        bytes operatorNotificationData
+    );
+
+    // ──────────────────────── Constants ────────────────────────
+
+    uint256 public constant TOTAL_SUPPLY = 1_000_000 ether;
+
+    // Skewed distribution percentages
+    uint256 public constant SHARE_AGENT_1 = (TOTAL_SUPPLY * 40) / 100; // 400,000
+    uint256 public constant SHARE_AGENT_2 = (TOTAL_SUPPLY * 30) / 100; // 300,000
+    uint256 public constant SHARE_AGENT_3 = (TOTAL_SUPPLY * 20) / 100; // 200,000
+    uint256 public constant SHARE_AGENT_4 = (TOTAL_SUPPLY * 10) / 100; // 100,000
+
+    // LSP7 interface ID: 0x05519512
+    bytes4 private constant _INTERFACE_ID_LSP7 = 0x05519512;
+
+    // ──────────────────────── Storage ────────────────────────
+
+    string private _name;
+    string private _symbol;
+    address private _owner;
+
+    uint256 private _totalSupply;
+    mapping(address => uint256) private _balances;
+    // operator => tokenOwner => amount
+    mapping(address => mapping(address => uint256)) private _operators;
+
+    // ──────────────────────── Constructor ────────────────────────
 
     /**
      * @param agents Array of exactly 4 council agent addresses.
-     *               Each receives 250,000 COUNCIL tokens.
+     *               Receives 40/30/20/10% of COUNCIL tokens respectively.
      */
     constructor(address[4] memory agents)
-        ERC20("Agent Council Token", "COUNCIL")
-        ERC20Permit("Agent Council Token")
+        EIP712("Agent Council Token", "1")
     {
+        _name = "Agent Council Token";
+        _symbol = "COUNCIL";
+        _owner = msg.sender;
+
+        uint256[4] memory shares = [SHARE_AGENT_1, SHARE_AGENT_2, SHARE_AGENT_3, SHARE_AGENT_4];
+
         for (uint256 i = 0; i < 4; i++) {
             require(agents[i] != address(0), "CouncilToken: zero address agent");
-            _mint(agents[i], SHARE_PER_AGENT);
+            _mint(agents[i], shares[i]);
         }
     }
 
-    // ──────────────────────── Required overrides ────────────────────────
+    // ──────────────────────── LSP7 View Functions ────────────────────────
 
-    function _update(address from, address to, uint256 value)
-        internal
-        override(ERC20, ERC20Votes)
-    {
-        super._update(from, to, value);
+    function name() public view returns (string memory) {
+        return _name;
     }
 
-    function nonces(address owner)
-        public
-        view
-        override(ERC20Permit, Nonces)
-        returns (uint256)
-    {
-        return super.nonces(owner);
+    function symbol() public view returns (string memory) {
+        return _symbol;
+    }
+
+    function decimals() public pure returns (uint8) {
+        return 18;
+    }
+
+    function totalSupply() public view returns (uint256) {
+        return _totalSupply;
+    }
+
+    function balanceOf(address account) public view returns (uint256) {
+        return _balances[account];
+    }
+
+    function owner() public view returns (address) {
+        return _owner;
+    }
+
+    // ──────────────────────── LSP7 Operator Functions ────────────────────────
+
+    function authorizeOperator(
+        address operator,
+        uint256 amount,
+        bytes memory operatorNotificationData
+    ) public virtual {
+        if (operator == address(0)) revert LSP7CannotUseAddressZeroAsOperator();
+        if (operator == msg.sender) revert LSP7TokenOwnerCannotBeOperator();
+
+        _operators[operator][msg.sender] = amount;
+
+        emit OperatorAuthorizationChanged(operator, msg.sender, amount, operatorNotificationData);
+    }
+
+    function revokeOperator(
+        address operator,
+        address tokenOwner,
+        bool notify,
+        bytes memory operatorNotificationData
+    ) public virtual {
+        if (operator == address(0)) revert LSP7CannotUseAddressZeroAsOperator();
+        require(msg.sender == tokenOwner || msg.sender == operator, "LSP7: caller not owner or operator");
+
+        delete _operators[operator][tokenOwner];
+
+        emit OperatorRevoked(operator, tokenOwner, notify, operatorNotificationData);
+    }
+
+    function authorizedAmountFor(
+        address operator,
+        address tokenOwner
+    ) public view returns (uint256) {
+        if (operator == tokenOwner) return _balances[tokenOwner];
+        return _operators[operator][tokenOwner];
+    }
+
+    // ──────────────────────── LSP7 Transfer Functions ────────────────────────
+
+    /**
+     * @notice Transfer `amount` tokens from `from` to `to`.
+     * @param from The sender address.
+     * @param to The recipient address.
+     * @param amount The amount to transfer.
+     * @param force When false, `to` must implement LSP1. When true, allow EOA recipients.
+     * @param data Additional data sent with the transfer.
+     */
+    function transfer(
+        address from,
+        address to,
+        uint256 amount,
+        bool force,
+        bytes memory data
+    ) public virtual {
+        if (from == to) revert LSP7CannotSendToSelf();
+
+        // Authorization check
+        if (msg.sender != from) {
+            uint256 authorizedAmount = _operators[msg.sender][from];
+            if (authorizedAmount < amount) {
+                revert LSP7AmountExceedsAuthorizedAmount(from, authorizedAmount, msg.sender, amount);
+            }
+            unchecked {
+                _operators[msg.sender][from] = authorizedAmount - amount;
+            }
+        }
+
+        _transfer(from, to, amount, force, data);
+    }
+
+    // ──────────────────────── ERC165 ────────────────────────
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return
+            interfaceId == _INTERFACE_ID_LSP7 ||
+            interfaceId == type(IERC165).interfaceId ||
+            // IVotes/IERC5805/IERC6372 interfaces
+            interfaceId == 0x2f3b90f4; // IERC5805
+    }
+
+    // ──────────────────────── Internal ────────────────────────
+
+    function _mint(address to, uint256 amount) internal {
+        _totalSupply += amount;
+        uint256 cap = _maxSupply();
+        if (_totalSupply > cap) {
+            revert LSP7ExceededSafeSupply(_totalSupply, cap);
+        }
+
+        _balances[to] += amount;
+
+        emit Transfer(msg.sender, address(0), to, amount, true, "");
+
+        _transferVotingUnits(address(0), to, amount);
+    }
+
+    function _transfer(
+        address from,
+        address to,
+        uint256 amount,
+        bool force,
+        bytes memory data
+    ) internal {
+        uint256 fromBalance = _balances[from];
+        if (fromBalance < amount) {
+            revert LSP7AmountExceedsBalance(fromBalance, from, amount);
+        }
+
+        unchecked {
+            _balances[from] = fromBalance - amount;
+        }
+        _balances[to] += amount;
+
+        emit Transfer(msg.sender, from, to, amount, force, data);
+
+        _transferVotingUnits(from, to, amount);
+    }
+
+    /**
+     * @dev Maximum token supply for voting safety. Defaults to type(uint208).max.
+     */
+    function _maxSupply() internal pure returns (uint256) {
+        return type(uint208).max;
+    }
+
+    /**
+     * @dev Returns the voting units of an account (= token balance).
+     */
+    function _getVotingUnits(address account) internal view override returns (uint256) {
+        return _balances[account];
     }
 }

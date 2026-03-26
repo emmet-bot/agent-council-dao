@@ -4,6 +4,15 @@ pragma solidity ^0.8.24;
 import {Votes} from "@openzeppelin/contracts/governance/utils/Votes.sol";
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+
+/**
+ * @dev LSP1 Universal Receiver interface for recipient notification.
+ */
+interface ILSP1UniversalReceiver {
+    function universalReceiver(bytes32 typeId, bytes memory data) external returns (bytes memory);
+}
+
 
 /**
  * @title CouncilToken
@@ -31,6 +40,7 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
  *  - Supports ERC165 interface detection for LSP7 interface ID
  */
 contract CouncilToken is Votes, IERC165 {
+    using EnumerableSet for EnumerableSet.AddressSet;
     // ──────────────────────── Errors ────────────────────────
 
     error LSP7AmountExceedsBalance(uint256 balance, address tokenOwner, uint256 amount);
@@ -82,6 +92,13 @@ contract CouncilToken is Votes, IERC165 {
     // LSP7 interface ID: 0x05519512
     bytes4 private constant _INTERFACE_ID_LSP7 = 0x05519512;
 
+    // LSP1 Universal Receiver interface ID
+    bytes4 private constant _INTERFACE_ID_LSP1 = 0x6bb56a14;
+
+    // keccak256("LSP7Tokens_RecipientNotification")
+    bytes32 private constant _TYPEID_LSP7_TOKENS_RECIPIENT =
+        0x20804611535B35A00CB8D9A33C47B5B4B3A8FE4AF2118F9CB1F90EDA4455F4AB;
+
     // ──────────────────────── Storage ────────────────────────
 
     string private _name;
@@ -92,6 +109,8 @@ contract CouncilToken is Votes, IERC165 {
     mapping(address => uint256) private _balances;
     // operator => tokenOwner => amount
     mapping(address => mapping(address => uint256)) private _operators;
+    // tokenOwner => set of authorized operators
+    mapping(address => EnumerableSet.AddressSet) private _operatorsOf;
 
     // ──────────────────────── Constructor ────────────────────────
 
@@ -151,6 +170,7 @@ contract CouncilToken is Votes, IERC165 {
         if (operator == msg.sender) revert LSP7TokenOwnerCannotBeOperator();
 
         _operators[operator][msg.sender] = amount;
+        _operatorsOf[msg.sender].add(operator);
 
         emit OperatorAuthorizationChanged(operator, msg.sender, amount, operatorNotificationData);
     }
@@ -165,6 +185,7 @@ contract CouncilToken is Votes, IERC165 {
         require(msg.sender == tokenOwner || msg.sender == operator, "LSP7: caller not owner or operator");
 
         delete _operators[operator][tokenOwner];
+        _operatorsOf[tokenOwner].remove(operator);
 
         emit OperatorRevoked(operator, tokenOwner, notify, operatorNotificationData);
     }
@@ -175,6 +196,15 @@ contract CouncilToken is Votes, IERC165 {
     ) public view returns (uint256) {
         if (operator == tokenOwner) return _balances[tokenOwner];
         return _operators[operator][tokenOwner];
+    }
+
+    /**
+     * @notice Returns all authorized operators for `tokenOwner`.
+     * @param tokenOwner The address whose operators to query.
+     * @return An array of operator addresses.
+     */
+    function getOperatorsOf(address tokenOwner) external view returns (address[] memory) {
+        return _operatorsOf[tokenOwner].values();
     }
 
     // ──────────────────────── LSP7 Transfer Functions ────────────────────────
@@ -234,6 +264,9 @@ contract CouncilToken is Votes, IERC165 {
         emit Transfer(msg.sender, address(0), to, amount, true, "");
 
         _transferVotingUnits(address(0), to, amount);
+
+        // LSP1 notification on mint (force=true for constructor mints)
+        _notifyTokenReceiver(to, true, "");
     }
 
     function _transfer(
@@ -248,6 +281,11 @@ contract CouncilToken is Votes, IERC165 {
             revert LSP7AmountExceedsBalance(fromBalance, from, amount);
         }
 
+        // force=false enforcement: if `to` is a contract it must support LSP1
+        if (!force) {
+            _enforceForce(to);
+        }
+
         unchecked {
             _balances[from] = fromBalance - amount;
         }
@@ -256,6 +294,51 @@ contract CouncilToken is Votes, IERC165 {
         emit Transfer(msg.sender, from, to, amount, force, data);
 
         _transferVotingUnits(from, to, amount);
+
+        // LSP1 notification on transfer
+        _notifyTokenReceiver(to, force, data);
+    }
+
+    /**
+     * @dev Enforce force=false: revert if `to` is a contract that doesn't support LSP1.
+     */
+    function _enforceForce(address to) internal view {
+        uint256 codeSize;
+        assembly {
+            codeSize := extcodesize(to)
+        }
+        if (codeSize > 0) {
+            // `to` is a contract — must support LSP1
+            try IERC165(to).supportsInterface(_INTERFACE_ID_LSP1) returns (bool supported) {
+                if (!supported) {
+                    revert LSP7NotifyTokenReceiverContractMissingLSP1Interface(to);
+                }
+            } catch {
+                revert LSP7NotifyTokenReceiverContractMissingLSP1Interface(to);
+            }
+        }
+    }
+
+    /**
+     * @dev Notify `to` via LSP1 universalReceiver if it supports the interface.
+     *      Wrapped in try/catch to avoid reverting on notification failure.
+     */
+    function _notifyTokenReceiver(address to, bool force, bytes memory data) internal {
+        uint256 codeSize;
+        assembly {
+            codeSize := extcodesize(to)
+        }
+        if (codeSize > 0) {
+            try IERC165(to).supportsInterface(_INTERFACE_ID_LSP1) returns (bool supported) {
+                if (supported) {
+                    // solhint-disable-next-line no-empty-blocks
+                    try ILSP1UniversalReceiver(to).universalReceiver(
+                        _TYPEID_LSP7_TOKENS_RECIPIENT,
+                        data
+                    ) {} catch {}
+                }
+            } catch {}
+        }
     }
 
     /**

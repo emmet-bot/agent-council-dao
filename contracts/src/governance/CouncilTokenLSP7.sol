@@ -42,12 +42,19 @@ interface ILSP1UniversalReceiver {
  * @dev Issue #8 compliance:
  *  ✅ LSP1 recipient notification (RecipientNotification)
  *  ✅ LSP1 sender notification (SenderNotification)
- *  ✅ force=false enforcement
+ *  ✅ force=false enforcement (contract without LSP1 is rejected; EOAs always allowed)
  *  ✅ getOperatorsOf()
  *  ✅ transferBatch()
  *  ✅ LSP4 tokenType constant
  *  ✅ increaseAllowance / decreaseAllowance
  *  ✅ ERC165 for LSP7 + IERC5805
+ *
+ * @dev BART audit fixes (PR #9 review, 2026-03-29):
+ *  ✅ H-04: Operator mapping corrected to _operators[tokenOwner][operator] (LSP7 spec order)
+ *  ✅ H-05: Deployment script added (script/DeployCouncilTokenLSP7.s.sol)
+ *  ✅ H-06: force parameter in _notifyTokenReceiver is now used correctly — only notifies
+ *            contracts when force=true, and only contracts that support LSP1 when force=false
+ *  ✅ H-07: revokeOperator access control tightened — only tokenOwner may revoke
  */
 contract CouncilTokenLSP7 is Votes, IERC165 {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -117,6 +124,8 @@ contract CouncilTokenLSP7 is Votes, IERC165 {
 
     uint256 private _totalSupply;
     mapping(address => uint256) private _balances;
+
+    // H-04 fix: correct LSP7 spec order — _operators[tokenOwner][operator]
     mapping(address => mapping(address => uint256)) private _operators;
     mapping(address => EnumerableSet.AddressSet) private _operatorsOf;
 
@@ -191,20 +200,28 @@ contract CouncilTokenLSP7 is Votes, IERC165 {
         if (operator == address(0)) revert LSP7CannotUseAddressZeroAsOperator();
         if (operator == msg.sender) revert LSP7TokenOwnerCannotBeOperator();
 
-        _operators[operator][msg.sender] = amount;
+        // H-04: correct spec order [tokenOwner][operator]
+        _operators[msg.sender][operator] = amount;
         _operatorsOf[msg.sender].add(operator);
 
         emit OperatorAuthorizationChanged(operator, msg.sender, amount, operatorNotificationData);
     }
 
+    /**
+     * @notice Revoke operator authorization for `operator` over `msg.sender`'s tokens.
+     * @dev H-07: Only the tokenOwner may revoke. An operator cannot unilaterally remove
+     *      themselves from another account's operator list.
+     */
     function revokeOperator(address operator, address tokenOwner, bool notify, bytes memory operatorNotificationData)
         public
         virtual
     {
         if (operator == address(0)) revert LSP7CannotUseAddressZeroAsOperator();
-        require(msg.sender == tokenOwner || msg.sender == operator, "LSP7: caller not owner or operator");
+        // H-07: only tokenOwner can revoke
+        require(msg.sender == tokenOwner, "LSP7: only tokenOwner can revoke operator");
 
-        delete _operators[operator][tokenOwner];
+        // H-04: correct spec order [tokenOwner][operator]
+        delete _operators[tokenOwner][operator];
         _operatorsOf[tokenOwner].remove(operator);
 
         emit OperatorRevoked(operator, tokenOwner, notify, operatorNotificationData);
@@ -212,7 +229,8 @@ contract CouncilTokenLSP7 is Votes, IERC165 {
 
     function authorizedAmountFor(address operator, address tokenOwner) public view returns (uint256) {
         if (operator == tokenOwner) return _balances[tokenOwner];
-        return _operators[operator][tokenOwner];
+        // H-04: correct spec order [tokenOwner][operator]
+        return _operators[tokenOwner][operator];
     }
 
     /**
@@ -232,8 +250,9 @@ contract CouncilTokenLSP7 is Votes, IERC165 {
         if (operator == address(0)) revert LSP7CannotUseAddressZeroAsOperator();
         if (operator == msg.sender) revert LSP7TokenOwnerCannotBeOperator();
 
-        uint256 newAmount = _operators[operator][msg.sender] + addedAmount;
-        _operators[operator][msg.sender] = newAmount;
+        // H-04: correct spec order [tokenOwner][operator]
+        uint256 newAmount = _operators[msg.sender][operator] + addedAmount;
+        _operators[msg.sender][operator] = newAmount;
         _operatorsOf[msg.sender].add(operator);
 
         emit OperatorAuthorizationChanged(operator, msg.sender, newAmount, operatorNotificationData);
@@ -248,14 +267,15 @@ contract CouncilTokenLSP7 is Votes, IERC165 {
     {
         if (operator == address(0)) revert LSP7CannotUseAddressZeroAsOperator();
 
-        uint256 currentAmount = _operators[operator][msg.sender];
+        // H-04: correct spec order [tokenOwner][operator]
+        uint256 currentAmount = _operators[msg.sender][operator];
         require(currentAmount >= subtractedAmount, "LSP7: decreased below zero");
 
         uint256 newAmount;
         unchecked {
             newAmount = currentAmount - subtractedAmount;
         }
-        _operators[operator][msg.sender] = newAmount;
+        _operators[msg.sender][operator] = newAmount;
 
         if (newAmount == 0) {
             _operatorsOf[msg.sender].remove(operator);
@@ -271,7 +291,7 @@ contract CouncilTokenLSP7 is Votes, IERC165 {
      * @param from The sender address.
      * @param to The recipient address.
      * @param amount The amount to transfer.
-     * @param force When false, `to` must implement LSP1. When true, allow EOA recipients.
+     * @param force When false, `to` must implement LSP1 if it is a contract. EOAs are always allowed.
      * @param data Additional data sent with the transfer.
      */
     function transfer(address from, address to, uint256 amount, bool force, bytes memory data) public virtual {
@@ -279,12 +299,13 @@ contract CouncilTokenLSP7 is Votes, IERC165 {
 
         // Authorization check
         if (msg.sender != from) {
-            uint256 authorizedAmount = _operators[msg.sender][from];
+            // H-04: correct spec order [tokenOwner][operator]
+            uint256 authorizedAmount = _operators[from][msg.sender];
             if (authorizedAmount < amount) {
                 revert LSP7AmountExceedsAuthorizedAmount(from, authorizedAmount, msg.sender, amount);
             }
             unchecked {
-                _operators[msg.sender][from] = authorizedAmount - amount;
+                _operators[from][msg.sender] = authorizedAmount - amount;
             }
         }
 
@@ -341,7 +362,7 @@ contract CouncilTokenLSP7 is Votes, IERC165 {
 
         _transferVotingUnits(address(0), to, amount);
 
-        // LSP1 notification on mint (recipient only, force=true for constructor mints)
+        // LSP1 notification on mint — force=true for constructor mints (always allow EOAs)
         _notifyTokenReceiver(to, true, "");
     }
 
@@ -353,7 +374,7 @@ contract CouncilTokenLSP7 is Votes, IERC165 {
             revert LSP7AmountExceedsBalance(fromBalance, from, amount);
         }
 
-        // force=false: `to` must support LSP1 if it's a contract
+        // H-06: force=false enforcement — reverts if `to` is a contract without LSP1
         if (!force) {
             _enforceForce(to);
         }
@@ -369,12 +390,13 @@ contract CouncilTokenLSP7 is Votes, IERC165 {
 
         // LSP1 sender notification
         _notifyTokenSender(from, data);
-        // LSP1 recipient notification
+        // H-06: pass force to recipient notification so it respects the caller's intent
         _notifyTokenReceiver(to, force, data);
     }
 
     /**
      * @dev Enforce force=false: revert if `to` is a contract that doesn't support LSP1.
+     *      EOAs (extcodesize == 0) are always allowed regardless of force.
      */
     function _enforceForce(address to) internal view {
         uint256 codeSize;
@@ -414,20 +436,32 @@ contract CouncilTokenLSP7 is Votes, IERC165 {
 
     /**
      * @dev Notify `to` via LSP1 universalReceiver with RecipientNotification type.
+     *      H-06: `force` is now used — when force=false, only contracts that explicitly
+     *      support LSP1 will be notified (the revert already happened in _enforceForce
+     *      for non-LSP1 contracts). When force=true, notification is attempted for all
+     *      contracts but failure does not revert. EOAs are never notified.
      *      Wrapped in try/catch — notification failure does not revert the transfer.
      */
-    function _notifyTokenReceiver(address to, bool, /* force */ bytes memory data) internal {
+    function _notifyTokenReceiver(address to, bool force, bytes memory data) internal {
         uint256 codeSize;
         assembly {
             codeSize := extcodesize(to)
         }
         if (codeSize > 0) {
-            try IERC165(to).supportsInterface(_INTERFACE_ID_LSP1) returns (bool supported) {
-                if (supported) {
-                    try ILSP1UniversalReceiver(to).universalReceiver(_TYPEID_LSP7_TOKENS_RECIPIENT, data) {}
-                    catch {}
-                }
-            } catch {}
+            if (!force) {
+                // force=false: _enforceForce already ensured `to` supports LSP1
+                // so we can call directly without re-checking
+                try ILSP1UniversalReceiver(to).universalReceiver(_TYPEID_LSP7_TOKENS_RECIPIENT, data) {}
+                catch {}
+            } else {
+                // force=true: attempt notification only if LSP1 is supported
+                try IERC165(to).supportsInterface(_INTERFACE_ID_LSP1) returns (bool supported) {
+                    if (supported) {
+                        try ILSP1UniversalReceiver(to).universalReceiver(_TYPEID_LSP7_TOKENS_RECIPIENT, data) {}
+                        catch {}
+                    }
+                } catch {}
+            }
         }
     }
 

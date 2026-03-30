@@ -14,6 +14,10 @@ import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
  * @title CouncilTokenLSP7Test
  * @notice Tests for the P11 LSP7-compatible governance token and its integration
  *         with the existing OZ Governor stack.
+ *
+ * Updated to cover BART audit fixes (2026-03-30):
+ *  - H-04: operator mapping is now [tokenOwner][operator] — tests verify correct reads/writes
+ *  - H-07: revokeOperator only callable by tokenOwner — operator self-revoke now reverts
  */
 contract CouncilTokenLSP7Test is Test {
     CouncilTokenLSP7 public token;
@@ -242,13 +246,14 @@ contract CouncilTokenLSP7Test is Test {
     }
 
     // ══════════════════════════════════════════════════════════
-    //  Operator Model
+    //  Operator Model (H-04 corrected mapping order tests)
     // ══════════════════════════════════════════════════════════
 
     function test_authorizeAndTransferAsOperator() public {
         vm.prank(agent1);
         token.authorizeOperator(agent2, 50_000 ether, "");
 
+        // H-04: authorizedAmountFor reads [tokenOwner][operator]
         assertEq(token.authorizedAmountFor(agent2, agent1), 50_000 ether);
 
         vm.prank(agent2);
@@ -263,10 +268,28 @@ contract CouncilTokenLSP7Test is Test {
         vm.prank(agent1);
         token.authorizeOperator(agent2, 50_000 ether, "");
 
+        // Only tokenOwner (agent1) can revoke
         vm.prank(agent1);
         token.revokeOperator(agent2, agent1, false, "");
 
         assertEq(token.authorizedAmountFor(agent2, agent1), 0);
+    }
+
+    /**
+     * @dev H-07: operator CANNOT unilaterally revoke themselves.
+     *      This was previously allowed; now only tokenOwner can revoke.
+     */
+    function test_operatorCannotSelfRevoke() public {
+        vm.prank(agent1);
+        token.authorizeOperator(agent2, 50_000 ether, "");
+
+        // agent2 (operator) tries to revoke itself — should revert
+        vm.prank(agent2);
+        vm.expectRevert("LSP7: only tokenOwner can revoke operator");
+        token.revokeOperator(agent2, agent1, false, "");
+
+        // Authorization should still be intact
+        assertEq(token.authorizedAmountFor(agent2, agent1), 50_000 ether);
     }
 
     function test_getOperatorsOf() public {

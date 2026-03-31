@@ -13,10 +13,10 @@ agents[] = [
 ]
 
 initialBalances[] = [
-  333_000 * 10**18,  // LUKSO Agent: 333k
-  333_000 * 10**18,  // Emmet: 333k
-  334_000 * 10**18,  // Leo: 334k
-  0                   // Ampy: 0 (per P6-CUTOFF — redist on April 10 if Jean D1 delivered)
+  400_000 * 10**18,  // LUKSO Agent: 400k
+  300_000 * 10**18,  // Emmet: 300k
+  200_000 * 10**18,  // Leo: 200k
+  100_000 * 10**18   // Ampy: 100k
 ]
 ```
 

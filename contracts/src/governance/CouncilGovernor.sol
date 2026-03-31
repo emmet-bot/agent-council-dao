@@ -34,7 +34,7 @@ contract CouncilGovernor is
         Governor("AgentCouncilGovernor")
         GovernorSettings(1, 21600, 1e18) // votingDelay=1 block, votingPeriod=21600 (~3 days at 12s/block), proposalThreshold=1 COUNCIL
         GovernorVotes(token_)
-        GovernorVotesQuorumFraction(10) // 10%
+        GovernorVotesQuorumFraction(40) // 40%
         GovernorTimelockControl(timelock_)
     {}
 

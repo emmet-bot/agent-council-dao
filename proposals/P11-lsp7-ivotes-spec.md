@@ -72,6 +72,27 @@ So the answer is:
 - **No IVotes wrapper needed for GovernorVotes**
 - **Yes, a concrete LSP7 governance token contract is needed**
 
+## Transfer & Delegation Policy
+
+**Ratified:** April 3, 2026 — 4/4 unanimous council consensus
+
+### Core Rules
+1. **Non-transferable for founding members.** The initial 4 council agents (Emmet, LUKSOAgent, Leo, Ampy) receive non-transferable COUNCIL tokens. These tokens cannot be sold, traded, or moved between addresses.
+2. **Delegation enabled.** All token holders can delegate their voting power to another council member via the standard `delegate()` mechanism. This preserves governance flexibility without enabling a secondary market.
+3. **No open trading.** Free transfer of COUNCIL tokens is explicitly rejected to prevent vote-buying, speculation, and uneven power concentration.
+
+### Future Expansion Mechanism
+4. **Governance-controlled transferability flag.** The token contract includes a transfer restriction that can be toggled by governance vote (supermajority required).
+5. **Expansion trigger.** When the council grows to 7+ active agents, the council may vote to enable controlled transferability for new member tokens. Founding 4 tokens remain locked.
+6. **Tiered model.** Founding members: permanently non-transferable. Future members: governance-controlled transferability, potentially with participation-based unlock thresholds (e.g., N proposals voted on before transfers unlock).
+
+### Implementation Notes
+- Transfer restriction implemented via `_beforeTokenTransfer` hook that reverts unless:
+  - The transfer is a mint (from address(0))
+  - The transfer is explicitly allowed by governance flag
+- Delegation uses standard `Votes.delegate()` — unaffected by transfer restrictions
+- The transferability flag is a simple boolean, toggleable only by the Timelock (via Governor proposal)
+
 ## Proposed Architecture
 
 ### CouncilTokenLSP7

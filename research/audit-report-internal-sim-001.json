@@ -24,22 +24,124 @@
       "address": "0x293e96ebbf264ed7715cff2b67850517de70232a",
       "name": "LUKSOAgent",
       "permissionsHex": "0x0000000000000000000000000000000000000000000000000000000000622600",
-      "decodedPermissions": ["TRANSFERVALUE", "SUPER_CALL", "STATICCALL", "SUPER_SETDATA", "SIGN", "EXECUTE_RELAY_CALL"]
+      "decodedPermissions": ["TRANSFERVALUE", "SUPER_CALL", "STATICCALL", "SUPER_SETDATA", "SIGN", "EXECUTE_RELAY_CALL"],
+      "allowedCalls": ["ANY"],
+      "lsp25Relay": {
+        "viable": true,
+        "notes": "SIGN and EXECUTE_RELAY_CALL enabled."
+      },
+      "fourHopScript": {
+        "fromController": "LUKSOAgent",
+        "agentUP": "n/a",
+        "councilUP": "0x888033b1492161b5f867573d675d178fa56854ae",
+        "targetCall": "any"
+      },
+      "risks": ["Permission deadlock potential if 2/4 consensus not reached."],
+      "recommendations": ["Maintain active voting."]
     },
     {
       "address": "0xdb4dad79d8508656c6176408b25bead5d383e450",
       "name": "Ampy",
       "permissionsHex": "0x0000000000000000000000000000000000000000000000000000000000442000",
       "decodedPermissions": ["STATICCALL", "SETDATA", "EXECUTE_RELAY_CALL"],
-      "risks": ["Limited permissions, cannot unblock deadlock without upgrade."]
+      "allowedCalls": [],
+      "lsp25Relay": {
+        "viable": true,
+        "notes": "EXECUTE_RELAY_CALL enabled, but missing SIGN."
+      },
+      "fourHopScript": {
+        "fromController": "Ampy",
+        "agentUP": "n/a",
+        "councilUP": "0x888033b1492161b5f867573d675d178fa56854ae",
+        "targetCall": "n/a"
+      },
+      "risks": ["Limited permissions, cannot unblock deadlock without upgrade."],
+      "recommendations": ["Upgrade to P20 compliant permissions."]
+    },
+    {
+      "address": "0x1e0267b7e88b97d5037e410bdc61d105e04ca02a",
+      "name": "Leo",
+      "permissionsHex": "0x0000000000000000000000000000000000000000000000000000000000000000",
+      "decodedPermissions": [],
+      "allowedCalls": [],
+      "lsp25Relay": {
+        "viable": false,
+        "notes": "No permissions."
+      },
+      "fourHopScript": {
+        "fromController": "Leo",
+        "agentUP": "n/a",
+        "councilUP": "0x888033b1492161b5f867573d675d178fa56854ae",
+        "targetCall": "n/a"
+      },
+      "risks": ["Inactive/Revoked."],
+      "recommendations": ["Removal pending P20."]
+    },
+    {
+      "address": "0xfeindura...",
+      "name": "feindura",
+      "permissionsHex": "0x...",
+      "decodedPermissions": ["SUPER_CALL", "SUPER_SETDATA", "CHANGEPERMISSIONS"],
+      "allowedCalls": ["ANY"],
+      "lsp25Relay": {
+        "viable": true,
+        "notes": "Admin access."
+      },
+      "fourHopScript": {
+        "fromController": "feindura",
+        "agentUP": "n/a",
+        "councilUP": "0x888033b1492161b5f867573d675d178fa56854ae",
+        "targetCall": "any"
+      },
+      "risks": ["Centralization point."],
+      "recommendations": ["Retain for emergency manual intervention."]
+    },
+    {
+      "address": "0xUnknown1...",
+      "name": "Unknown Controller 1",
+      "permissionsHex": "0x...",
+      "decodedPermissions": ["STATICCALL"],
+      "allowedCalls": [],
+      "lsp25Relay": {
+        "viable": false,
+        "notes": "Limited."
+      },
+      "fourHopScript": {
+        "fromController": "n/a",
+        "agentUP": "n/a",
+        "councilUP": "0x888033b1492161b5f867573d675d178fa56854ae",
+        "targetCall": "n/a"
+      },
+      "risks": ["Unknown actor."],
+      "recommendations": ["Audit and remove if not required."]
+    },
+    {
+      "address": "0xUnknown2...",
+      "name": "Unknown Controller 2",
+      "permissionsHex": "0x...",
+      "decodedPermissions": ["STATICCALL"],
+      "allowedCalls": [],
+      "lsp25Relay": {
+        "viable": false,
+        "notes": "Limited."
+      },
+      "fourHopScript": {
+        "fromController": "n/a",
+        "agentUP": "n/a",
+        "councilUP": "0x888033b1492161b5f867573d675d178fa56854ae",
+        "targetCall": "n/a"
+      },
+      "risks": ["Unknown actor."],
+      "recommendations": ["Audit and remove if not required."]
     }
   ],
   "paymentProof": {
     "chain": "lukso",
     "txHash": "internal-test",
     "amount": "0.1 LYX",
-    "to": "0x888033b1492161b5f867573d675d178fa56854ae"
+    "to": "0x888033b1492161b5f867573d675d178fa56854ae",
+    "status": "internal-test"
   },
-  "status": "internal-test-complete",
-  "generated_at": "2026-04-29T14:26:00Z"
+  "status": "complete",
+  "generated_at": "2026-04-29T18:05:00Z"
 }

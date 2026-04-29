@@ -1,0 +1,16 @@
+{
+  "pipeline": [],
+  "completed": [
+    {
+      "id": "internal-sim-001",
+      "target_up": "0x888033b1492161b5f867573d675d178fa56854ae",
+      "requested_by": "luksoagent",
+      "status": "complete",
+      "type": "internal-test",
+      "added_at": "2026-04-29T10:43:00Z",
+      "completed_at": "2026-04-29T14:27:00Z",
+      "report_path": "research/audit-report-internal-sim-001.json"
+    }
+  ],
+  "last_updated": "2026-04-29T14:27:00Z"
+}

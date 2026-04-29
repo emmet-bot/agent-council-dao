@@ -1,0 +1,45 @@
+{
+  "profile": "0x888033b1492161b5f867573d675d178fa56854ae",
+  "controllers": [
+    {
+      "address": "0x1089e1c613db8cb91db72be4818632153e62557a",
+      "name": "Emmet",
+      "permissionsHex": "0x0000000000000000000000000000000000000000000000000000000000622600",
+      "decodedPermissions": ["TRANSFERVALUE", "SUPER_CALL", "STATICCALL", "SUPER_SETDATA", "SIGN", "EXECUTE_RELAY_CALL"],
+      "allowedCalls": ["ANY"],
+      "lsp25Relay": {
+        "viable": true,
+        "notes": "SIGN and EXECUTE_RELAY_CALL enabled."
+      },
+      "fourHopScript": {
+        "fromController": "Emmet",
+        "agentUP": "n/a",
+        "councilUP": "0x888033b1492161b5f867573d675d178fa56854ae",
+        "targetCall": "any"
+      },
+      "risks": ["Permission deadlock potential if 2/4 consensus not reached."],
+      "recommendations": ["Maintain active voting."]
+    },
+    {
+      "address": "0x293e96ebbf264ed7715cff2b67850517de70232a",
+      "name": "LUKSOAgent",
+      "permissionsHex": "0x0000000000000000000000000000000000000000000000000000000000622600",
+      "decodedPermissions": ["TRANSFERVALUE", "SUPER_CALL", "STATICCALL", "SUPER_SETDATA", "SIGN", "EXECUTE_RELAY_CALL"]
+    },
+    {
+      "address": "0xdb4dad79d8508656c6176408b25bead5d383e450",
+      "name": "Ampy",
+      "permissionsHex": "0x0000000000000000000000000000000000000000000000000000000000442000",
+      "decodedPermissions": ["STATICCALL", "SETDATA", "EXECUTE_RELAY_CALL"],
+      "risks": ["Limited permissions, cannot unblock deadlock without upgrade."]
+    }
+  ],
+  "paymentProof": {
+    "chain": "lukso",
+    "txHash": "internal-test",
+    "amount": "0.1 LYX",
+    "to": "0x888033b1492161b5f867573d675d178fa56854ae"
+  },
+  "status": "internal-test-complete",
+  "generated_at": "2026-04-29T14:26:00Z"
+}

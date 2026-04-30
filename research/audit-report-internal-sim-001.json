@@ -78,61 +78,61 @@
       "recommendations": ["Removal pending P20."]
     },
     {
-      "address": "0xfeindura...",
-      "name": "feindura",
-      "permissionsHex": "0x...",
-      "decodedPermissions": ["SUPER_CALL", "SUPER_SETDATA", "CHANGEPERMISSIONS"],
+      "address": "0x7870c5b8bc9572a8001c3f96f7ff59961b23500d",
+      "name": "Fabian (Advisor/Deployer)",
+      "permissionsHex": "0x0000000000000000000000000000000000000000000000000000000000060080",
+      "decodedPermissions": ["REENTRANCY", "SUPER_SETDATA", "SETDATA"],
       "allowedCalls": ["ANY"],
       "lsp25Relay": {
-        "viable": true,
-        "notes": "Admin access."
+        "viable": false,
+        "notes": "Missing SIGN and EXECUTE_RELAY_CALL."
       },
       "fourHopScript": {
-        "fromController": "feindura",
+        "fromController": "Fabian",
         "agentUP": "n/a",
         "councilUP": "0x888033b1492161b5f867573d675d178fa56854ae",
         "targetCall": "any"
       },
-      "risks": ["Centralization point."],
+      "risks": ["Can modify profile metadata unilaterally."],
       "recommendations": ["Retain for emergency manual intervention."]
     },
     {
-      "address": "0xUnknown1...",
-      "name": "Unknown Controller 1",
-      "permissionsHex": "0x...",
-      "decodedPermissions": ["STATICCALL"],
-      "allowedCalls": [],
+      "address": "0x9155b15e2165265d3cc5e1419a58b6115131c631",
+      "name": "Unknown Admin 1",
+      "permissionsHex": "0x00000000000000000000000000000000000000000000000000000000007f3f06",
+      "decodedPermissions": ["ADDCONTROLLER", "EDITPERMISSIONS", "SUPER_TRANSFERVALUE", "TRANSFERVALUE", "SUPER_CALL", "CALL", "SUPER_STATICCALL", "STATICCALL", "DEPLOY", "SUPER_SETDATA", "SETDATA", "ENCRYPT", "DECRYPT", "SIGN", "EXECUTE_RELAY_CALL"],
+      "allowedCalls": ["ANY"],
       "lsp25Relay": {
-        "viable": false,
-        "notes": "Limited."
+        "viable": true,
+        "notes": "Full admin relay capability."
       },
       "fourHopScript": {
         "fromController": "n/a",
         "agentUP": "n/a",
         "councilUP": "0x888033b1492161b5f867573d675d178fa56854ae",
-        "targetCall": "n/a"
+        "targetCall": "any"
       },
-      "risks": ["Unknown actor."],
-      "recommendations": ["Audit and remove if not required."]
+      "risks": ["CRITICAL: Full admin permissions held by unknown EOA."],
+      "recommendations": ["Identify owner or remove immediately to prevent unauthorized control."]
     },
     {
-      "address": "0xUnknown2...",
-      "name": "Unknown Controller 2",
-      "permissionsHex": "0x...",
-      "decodedPermissions": ["STATICCALL"],
-      "allowedCalls": [],
+      "address": "0x913f8b01b1c2cbf6875127ef5b0b4cc289e14cc7",
+      "name": "Unknown Admin 2",
+      "permissionsHex": "0x00000000000000000000000000000000000000000000000000000000007f3f06",
+      "decodedPermissions": ["ADDCONTROLLER", "EDITPERMISSIONS", "SUPER_TRANSFERVALUE", "TRANSFERVALUE", "SUPER_CALL", "CALL", "SUPER_STATICCALL", "STATICCALL", "DEPLOY", "SUPER_SETDATA", "SETDATA", "ENCRYPT", "DECRYPT", "SIGN", "EXECUTE_RELAY_CALL"],
+      "allowedCalls": ["ANY"],
       "lsp25Relay": {
-        "viable": false,
-        "notes": "Limited."
+        "viable": true,
+        "notes": "Full admin relay capability."
       },
       "fourHopScript": {
         "fromController": "n/a",
         "agentUP": "n/a",
         "councilUP": "0x888033b1492161b5f867573d675d178fa56854ae",
-        "targetCall": "n/a"
+        "targetCall": "any"
       },
-      "risks": ["Unknown actor."],
-      "recommendations": ["Audit and remove if not required."]
+      "risks": ["CRITICAL: Full admin permissions held by unknown EOA."],
+      "recommendations": ["Identify owner or remove immediately to prevent unauthorized control."]
     }
   ],
   "paymentProof": {

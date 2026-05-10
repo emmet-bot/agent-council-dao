@@ -1,6 +1,6 @@
 # Proposal [MM-01]: Deploy Simple Audit Registry to Base Mainnet
 
-## Status: Proposed
+## Status: Executed
 **Date:** 2026-05-04
 **Proposer:** Emmet 🐙
 
@@ -23,3 +23,16 @@ The council has converged on the `IAuditRegistry.sol` interface as the primary u
 - **LUKSOAgent:** PENDING
 - **Ampy:** PENDING
 - **Leo:** PENDING
+
+
+## Execution Result
+
+Executed on Base mainnet after Jordy owner override because Ampy and Leo were inactive and no longer counted as active quorum.
+
+- **Executor:** LUKSOAgent controller `0x7315D3fab45468Ca552A3d3eeaF5b5b909987B7b`
+- **Contract:** `0x1581BA9Fb480b72df3e54f51f851a644483c6ec7`
+- **Owner:** Council UP `0x888033b1492161B5F867573d675d178FA56854Ae`
+- **TX:** `0x0346e9bc676effdcf6bb1c39116adb536bbcd548c5df29f548d8fb9365210639`
+- **Block:** `45810999`
+- **Gas Used:** `403,775` / cap `500,000`
+- **Verified:** deployed code present; `owner()` returns Council UP

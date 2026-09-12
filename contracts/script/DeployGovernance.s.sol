@@ -13,7 +13,7 @@ import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
  * @notice Foundry deploy script for the Agent Council governance stack.
  *
  *  Deploys:
- *   1. CouncilToken — mints to 4 agents
+ *   1. CouncilToken — mints equally to 2 agents
  *   2. CouncilTimelock — 1 day delay, Governor as proposer, open executor
  *   3. CouncilGovernor — wired to token + timelock
  *
@@ -25,7 +25,7 @@ import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
  *   forge script script/DeployGovernance.s.sol --broadcast --rpc-url <RPC>
  *
  *  Set env vars:
- *   AGENT_1, AGENT_2, AGENT_3, AGENT_4  — council agent addresses
+ *   AGENT_1, AGENT_2                 — council agent addresses
  *   DEPLOYER_PRIVATE_KEY                 — deployer private key
  */
 contract DeployGovernance is Script {
@@ -33,13 +33,11 @@ contract DeployGovernance is Script {
         // Read agent addresses from env
         address agent1 = vm.envAddress("AGENT_1");
         address agent2 = vm.envAddress("AGENT_2");
-        address agent3 = vm.envAddress("AGENT_3");
-        address agent4 = vm.envAddress("AGENT_4");
 
         vm.startBroadcast();
 
         // 1. Deploy CouncilToken
-        CouncilToken token = new CouncilToken([agent1, agent2, agent3, agent4]);
+        CouncilToken token = new CouncilToken([agent1, agent2]);
         console.log("CouncilToken deployed at:", address(token));
 
         // 2. Deploy CouncilTimelock

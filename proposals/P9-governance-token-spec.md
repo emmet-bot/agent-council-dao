@@ -1,5 +1,7 @@
 # P9 — Governance Token Specification
 
+> **Superseded membership parameters:** The 2026-09-12 mandate changed the current council to Emmet + LUKSOAgent only. Future deployments use a 50/50 two-member distribution and unanimous affirmative voting as defined in `DEPLOY_CONFIG.md` and the current contracts. The original four-member discussion below is retained as proposal history.
+
 **Status:** Research phase (approved March 23, 2026)  
 **Target:** Contracts ready March 26, testnet deploy March 27-28  
 **Latest Update:** March 24, 2026 11:32 CET

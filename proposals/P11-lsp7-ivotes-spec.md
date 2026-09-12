@@ -1,5 +1,7 @@
 # P11 — LSP7 + IVotes Governance Token Specification
 
+> **Superseded membership parameters:** The 2026-09-12 mandate changed the current council to Emmet + LUKSOAgent only. Future deployments use a 50/50 two-member distribution and unanimous affirmative voting as defined in `DEPLOY_CONFIG.md` and the current contracts. The original four-member design discussion below is retained as proposal history.
+
 **Status:** Proposed March 27, 2026  
 **Target:** Replace the current P9 ERC20Votes test token with a LUKSO-native LSP7 voting token on LUKSO mainnet, while keeping ERC20Votes deployments on Base and Ethereum where appropriate.
 

@@ -9,6 +9,7 @@ import {TimelockController} from "@openzeppelin/contracts/governance/TimelockCon
 import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
 import {IGovernor} from "@openzeppelin/contracts/governance/IGovernor.sol";
 import {IERC165} from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import {IERC5805} from "@openzeppelin/contracts/interfaces/IERC5805.sol";
 
 /**
  * @title CouncilTokenLSP7Test
@@ -26,14 +27,14 @@ contract CouncilTokenLSP7Test is Test {
 
     address public agent1 = makeAddr("agent1");
     address public agent2 = makeAddr("agent2");
-    address public agent3 = makeAddr("agent3");
-    address public agent4 = makeAddr("agent4");
+    address public recipient = makeAddr("recipient");
+    address public operatorAccount = makeAddr("operator");
 
     address public target = makeAddr("target");
 
     function setUp() public {
         // 1. Deploy LSP7 token
-        token = new CouncilTokenLSP7([agent1, agent2, agent3, agent4]);
+        token = new CouncilTokenLSP7([agent1, agent2]);
 
         // 2. Deploy timelock
         address[] memory proposers = new address[](0);
@@ -81,11 +82,11 @@ contract CouncilTokenLSP7Test is Test {
         assertEq(token.tokenType(), 0);
     }
 
-    function test_skewedDistribution() public view {
-        assertEq(token.balanceOf(agent1), 400_000 ether);
-        assertEq(token.balanceOf(agent2), 300_000 ether);
-        assertEq(token.balanceOf(agent3), 200_000 ether);
-        assertEq(token.balanceOf(agent4), 100_000 ether);
+    function test_equalTwoMemberDistribution() public view {
+        assertEq(token.balanceOf(agent1), 500_000 ether);
+        assertEq(token.balanceOf(agent2), 500_000 ether);
+        assertEq(token.balanceOf(recipient), 0);
+        assertEq(token.balanceOf(operatorAccount), 0);
     }
 
     // ══════════════════════════════════════════════════════════
@@ -101,8 +102,7 @@ contract CouncilTokenLSP7Test is Test {
     }
 
     function test_supportsIERC5805Interface() public view {
-        // IERC5805 interface ID
-        assertTrue(token.supportsInterface(0x2f3a40d9));
+        assertTrue(token.supportsInterface(type(IERC5805).interfaceId));
     }
 
     function test_doesNotSupportRandomInterface() public view {
@@ -117,36 +117,30 @@ contract CouncilTokenLSP7Test is Test {
         // H-01: agents should be auto-delegated in constructor
         assertEq(token.delegates(agent1), agent1);
         assertEq(token.delegates(agent2), agent2);
-        assertEq(token.delegates(agent3), agent3);
-        assertEq(token.delegates(agent4), agent4);
     }
 
     function test_votingPowerMatchesBalance() public view {
-        assertEq(token.getVotes(agent1), 400_000 ether);
-        assertEq(token.getVotes(agent2), 300_000 ether);
-        assertEq(token.getVotes(agent3), 200_000 ether);
-        assertEq(token.getVotes(agent4), 100_000 ether);
+        assertEq(token.getVotes(agent1), 500_000 ether);
+        assertEq(token.getVotes(agent2), 500_000 ether);
     }
 
     function test_delegationMovesVotingPower() public {
-        vm.prank(agent4);
+        vm.prank(agent2);
         token.delegate(agent1);
 
-        assertEq(token.getVotes(agent1), 500_000 ether);
-        assertEq(token.getVotes(agent4), 0);
-        assertEq(token.balanceOf(agent4), 100_000 ether); // balance unchanged
+        assertEq(token.getVotes(agent1), 1_000_000 ether);
+        assertEq(token.getVotes(agent2), 0);
+        assertEq(token.balanceOf(agent2), 500_000 ether); // balance unchanged
     }
 
     function test_getPastVotes() public {
-        uint256 checkBlock = block.number;
-
         // Transfer some tokens
         vm.prank(agent1);
         token.transfer(agent1, agent2, 100_000 ether, true, "");
-        vm.roll(block.number + 1);
+        vm.roll(block.number + 2);
 
         // Past votes at the checkpoint block should reflect pre-transfer state
-        assertEq(token.getPastVotes(agent1, checkBlock), 400_000 ether);
+        assertEq(token.getPastVotes(agent1, block.number - 3), 500_000 ether);
     }
 
     // ══════════════════════════════════════════════════════════
@@ -157,12 +151,12 @@ contract CouncilTokenLSP7Test is Test {
         vm.prank(agent1);
         token.transfer(agent1, agent2, 50_000 ether, true, "");
 
-        assertEq(token.balanceOf(agent1), 350_000 ether);
-        assertEq(token.balanceOf(agent2), 350_000 ether);
+        assertEq(token.balanceOf(agent1), 450_000 ether);
+        assertEq(token.balanceOf(agent2), 550_000 ether);
 
         // Voting power follows balance (both self-delegated)
-        assertEq(token.getVotes(agent1), 350_000 ether);
-        assertEq(token.getVotes(agent2), 350_000 ether);
+        assertEq(token.getVotes(agent1), 450_000 ether);
+        assertEq(token.getVotes(agent2), 550_000 ether);
     }
 
     function test_transferRevertsOnSelf() public {
@@ -178,16 +172,16 @@ contract CouncilTokenLSP7Test is Test {
     }
 
     function test_transferRevertsOnInsufficientBalance() public {
-        vm.prank(agent4);
+        vm.prank(recipient);
         vm.expectRevert(
             abi.encodeWithSelector(
                 CouncilTokenLSP7.LSP7AmountExceedsBalance.selector,
-                100_000 ether,
-                agent4,
-                200_000 ether
+                0,
+                recipient,
+                1 ether
             )
         );
-        token.transfer(agent4, agent1, 200_000 ether, true, "");
+        token.transfer(recipient, agent1, 1 ether, true, "");
     }
 
     // ══════════════════════════════════════════════════════════
@@ -201,7 +195,7 @@ contract CouncilTokenLSP7Test is Test {
 
         address[] memory to = new address[](2);
         to[0] = agent2;
-        to[1] = agent3;
+        to[1] = recipient;
 
         uint256[] memory amounts = new uint256[](2);
         amounts[0] = 10_000 ether;
@@ -218,9 +212,9 @@ contract CouncilTokenLSP7Test is Test {
         vm.prank(agent1);
         token.transferBatch(from, to, amounts, force, data);
 
-        assertEq(token.balanceOf(agent1), 370_000 ether);
-        assertEq(token.balanceOf(agent2), 310_000 ether);
-        assertEq(token.balanceOf(agent3), 220_000 ether);
+        assertEq(token.balanceOf(agent1), 470_000 ether);
+        assertEq(token.balanceOf(agent2), 510_000 ether);
+        assertEq(token.balanceOf(recipient), 20_000 ether);
     }
 
     function test_transferBatchRevertsOnLengthMismatch() public {
@@ -229,7 +223,7 @@ contract CouncilTokenLSP7Test is Test {
 
         address[] memory to = new address[](2);
         to[0] = agent2;
-        to[1] = agent3;
+        to[1] = recipient;
 
         uint256[] memory amounts = new uint256[](1);
         amounts[0] = 100 ether;
@@ -257,10 +251,10 @@ contract CouncilTokenLSP7Test is Test {
         assertEq(token.authorizedAmountFor(agent2, agent1), 50_000 ether);
 
         vm.prank(agent2);
-        token.transfer(agent1, agent3, 50_000 ether, true, "");
+        token.transfer(agent1, recipient, 50_000 ether, true, "");
 
-        assertEq(token.balanceOf(agent1), 350_000 ether);
-        assertEq(token.balanceOf(agent3), 250_000 ether);
+        assertEq(token.balanceOf(agent1), 450_000 ether);
+        assertEq(token.balanceOf(recipient), 50_000 ether);
         assertEq(token.authorizedAmountFor(agent2, agent1), 0);
     }
 
@@ -296,7 +290,7 @@ contract CouncilTokenLSP7Test is Test {
         vm.prank(agent1);
         token.authorizeOperator(agent2, 100 ether, "");
         vm.prank(agent1);
-        token.authorizeOperator(agent3, 200 ether, "");
+        token.authorizeOperator(operatorAccount, 200 ether, "");
 
         address[] memory ops = token.getOperatorsOf(agent1);
         assertEq(ops.length, 2);
@@ -351,12 +345,12 @@ contract CouncilTokenLSP7Test is Test {
 
     function test_duplicateAgentReverts() public {
         vm.expectRevert(CouncilTokenLSP7.DuplicateAgentAddress.selector);
-        new CouncilTokenLSP7([agent1, agent1, agent3, agent4]);
+        new CouncilTokenLSP7([agent1, agent1]);
     }
 
     function test_zeroAddressAgentReverts() public {
         vm.expectRevert("CouncilToken: zero address agent");
-        new CouncilTokenLSP7([address(0), agent2, agent3, agent4]);
+        new CouncilTokenLSP7([address(0), agent2]);
     }
 
     // ══════════════════════════════════════════════════════════
@@ -382,7 +376,7 @@ contract CouncilTokenLSP7Test is Test {
         assertEq(uint256(governor.state(proposalId)), uint256(IGovernor.ProposalState.Pending));
 
         // ── Advance past voting delay ──
-        vm.roll(block.number + 2);
+        vm.roll(block.number + 76);
         assertEq(uint256(governor.state(proposalId)), uint256(IGovernor.ProposalState.Active));
 
         // ── Vote ──
@@ -390,11 +384,8 @@ contract CouncilTokenLSP7Test is Test {
         governor.castVote(proposalId, 1); // For
         vm.prank(agent2);
         governor.castVote(proposalId, 1); // For
-        vm.prank(agent3);
-        governor.castVote(proposalId, 1); // For
-
         // ── Advance past voting period ──
-        vm.roll(block.number + 21601);
+        vm.roll(block.number + 50401);
         assertEq(uint256(governor.state(proposalId)), uint256(IGovernor.ProposalState.Succeeded));
 
         // ── Queue ──
@@ -403,7 +394,7 @@ contract CouncilTokenLSP7Test is Test {
         assertEq(uint256(governor.state(proposalId)), uint256(IGovernor.ProposalState.Queued));
 
         // ── Advance past timelock ──
-        vm.warp(block.timestamp + 1 days + 1);
+        vm.warp(block.timestamp + 3 days + 1);
 
         // ── Execute ──
         uint256 balanceBefore = target.balance;
@@ -413,13 +404,13 @@ contract CouncilTokenLSP7Test is Test {
     }
 
     function test_proposalThresholdWithLSP7() public view {
-        assertEq(governor.proposalThreshold(), 1e18);
+        assertEq(governor.proposalThreshold(), 0);
     }
 
     function test_quorumWithLSP7() public view {
-        // 10% of 1,000,000 = 100,000
+        // 100% of 1,000,000 = both 500,000-token members
         uint256 q = governor.quorum(block.number - 1);
-        assertEq(q, 100_000 ether);
+        assertEq(q, 1_000_000 ether);
     }
 
     function test_proposalDefeatedWithZeroVotes() public {
@@ -435,13 +426,13 @@ contract CouncilTokenLSP7Test is Test {
         vm.prank(agent1);
         uint256 proposalId = governor.propose(targets, values, calldatas, description);
 
-        vm.roll(block.number + 2);
-        vm.roll(block.number + 21601);
+        vm.roll(block.number + 76);
+        vm.roll(block.number + 50401);
 
         assertEq(uint256(governor.state(proposalId)), uint256(IGovernor.ProposalState.Defeated));
     }
 
-    function test_agent4MeetsQuorumAlone() public {
+    function test_oneMemberAloneCannotMeetQuorum() public {
         vm.deal(address(timelock), 1 ether);
 
         address[] memory targets = new address[](1);
@@ -449,22 +440,22 @@ contract CouncilTokenLSP7Test is Test {
         uint256[] memory values = new uint256[](1);
         bytes[] memory calldatas = new bytes[](1);
         calldatas[0] = "";
-        string memory description = "Agent4 solo quorum test";
+        string memory description = "One-member solo quorum test";
 
         vm.prank(agent1);
         uint256 proposalId = governor.propose(targets, values, calldatas, description);
 
-        vm.roll(block.number + 2);
+        vm.roll(block.number + 76);
 
-        vm.prank(agent4);
-        governor.castVote(proposalId, 1); // FOR — 100k = exactly 10% quorum
+        vm.prank(agent1);
+        governor.castVote(proposalId, 1); // FOR — 500k is below 100% quorum
 
-        vm.roll(block.number + 21601);
+        vm.roll(block.number + 50401);
 
-        assertEq(uint256(governor.state(proposalId)), uint256(IGovernor.ProposalState.Succeeded));
+        assertEq(uint256(governor.state(proposalId)), uint256(IGovernor.ProposalState.Defeated));
     }
 
-    function test_cannotProposeWithoutTokens() public {
+    function test_zeroTokenAddressCanProposeAtZeroThreshold() public {
         address nobody = makeAddr("nobody");
 
         address[] memory targets = new address[](1);
@@ -473,8 +464,8 @@ contract CouncilTokenLSP7Test is Test {
         bytes[] memory calldatas = new bytes[](1);
 
         vm.prank(nobody);
-        vm.expectRevert();
-        governor.propose(targets, values, calldatas, "Should fail");
+        uint256 proposalId = governor.propose(targets, values, calldatas, "Zero-threshold proposal");
+        assertEq(uint256(governor.state(proposalId)), uint256(IGovernor.ProposalState.Pending));
     }
 
     function test_timelockEnforcedWithLSP7() public {
@@ -491,14 +482,14 @@ contract CouncilTokenLSP7Test is Test {
         vm.prank(agent1);
         uint256 proposalId = governor.propose(targets, values, calldatas, description);
 
-        vm.roll(block.number + 2);
+        vm.roll(block.number + 76);
 
         vm.prank(agent1);
         governor.castVote(proposalId, 1);
         vm.prank(agent2);
         governor.castVote(proposalId, 1);
 
-        vm.roll(block.number + 21601);
+        vm.roll(block.number + 50401);
 
         bytes32 descHash = keccak256(bytes(description));
         governor.queue(targets, values, calldatas, descHash);
@@ -508,7 +499,7 @@ contract CouncilTokenLSP7Test is Test {
         governor.execute(targets, values, calldatas, descHash);
 
         // After delay should succeed
-        vm.warp(block.timestamp + 1 days + 1);
+        vm.warp(block.timestamp + 3 days + 1);
         governor.execute(targets, values, calldatas, descHash);
         assertEq(uint256(governor.state(proposalId)), uint256(IGovernor.ProposalState.Executed));
     }
@@ -529,40 +520,38 @@ contract CouncilTokenLSP7Test is Test {
     }
 
     function test_votingPowerSnapshotAfterTransfer() public {
-        uint256 snapBlock = block.number;
-
         vm.prank(agent1);
         token.transfer(agent1, agent2, 100_000 ether, true, "");
 
-        vm.roll(block.number + 1);
+        vm.roll(block.number + 2);
 
         // Past votes should reflect the PRE-transfer state
-        assertEq(token.getPastVotes(agent1, snapBlock), 400_000 ether);
-        assertEq(token.getPastVotes(agent2, snapBlock), 300_000 ether);
+        assertEq(token.getPastVotes(agent1, block.number - 3), 500_000 ether);
+        assertEq(token.getPastVotes(agent2, block.number - 3), 500_000 ether);
     }
 
     function test_delegatedVotingThroughGovernor() public {
-        // agent4 delegates to agent1
-        vm.prank(agent4);
+        // agent2 delegates to agent1
+        vm.prank(agent2);
         token.delegate(agent1);
 
         vm.roll(block.number + 1);
 
-        // agent1 now has 500k votes, agent4 has 0
-        assertEq(token.getVotes(agent1), 500_000 ether);
-        assertEq(token.getVotes(agent4), 0);
+        // agent1 now has all votes, agent2 has 0
+        assertEq(token.getVotes(agent1), 1_000_000 ether);
+        assertEq(token.getVotes(agent2), 0);
 
-        // But agent4 still holds the tokens
-        assertEq(token.balanceOf(agent4), 100_000 ether);
+        // But agent2 still holds the tokens
+        assertEq(token.balanceOf(agent2), 500_000 ether);
 
-        // agent4 cannot propose (0 voting power, below threshold)
+        // The Governor has a zero proposal threshold, so a delegated-away member may still propose.
         address[] memory targets = new address[](1);
         targets[0] = target;
         uint256[] memory values = new uint256[](1);
         bytes[] memory calldatas = new bytes[](1);
 
-        vm.prank(agent4);
-        vm.expectRevert();
-        governor.propose(targets, values, calldatas, "Should fail — no voting power");
+        vm.prank(agent2);
+        uint256 proposalId = governor.propose(targets, values, calldatas, "Zero-threshold delegated proposal");
+        assertEq(uint256(governor.state(proposalId)), uint256(IGovernor.ProposalState.Pending));
     }
 }

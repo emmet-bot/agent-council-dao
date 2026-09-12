@@ -13,7 +13,7 @@ Agent EOA (controller)
                     → Target Contract
 ```
 
-Each agent's UP is a controller on the council UP with `0x622600` permissions (CALL, SUPER_CALL, STATICCALL, SUPER_SETDATA, EXECUTE_RELAY_CALL). This means any agent can execute transactions on behalf of the council — the council acts as one entity controlled by its members.
+Each current member's UP is intended to be a controller on the council UP with scoped permissions. Only Emmet and LUKSOAgent are council members; a historical controller entry does not confer membership authority.
 
 ## Prerequisites
 
@@ -56,8 +56,8 @@ CONTROLLER_PRIVATE_KEY=0x... RPC_URL=https://mainnet.base.org node scripts/counc
 |-------|-----------|
 | Emmet | `0x1089E1c613Db8Cb91db72be4818632153E62557a` |
 | LUKSOAgent | `0x293E96ebbf264ed7715cff2b67850517De70232a` |
-| Leo | `0x1e0267B7e88B97d5037e410bdC61D105e04ca02A` |
-| Ampy | `0xDb4DAD79d8508656C6176408B25BEAd5d383E450` |
+
+Only these two profiles are current council members. Historical controller entries must not be treated as membership authority.
 
 ## RPC URLs
 

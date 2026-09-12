@@ -17,7 +17,7 @@ import {IVotes} from "@openzeppelin/contracts/governance/utils/IVotes.sol";
  *  Voting delay:         75 blocks (~15 minutes)
  *  Voting period:        50400 blocks (~7 days on LUKSO at 12s/block)
  *  Proposal threshold:   0 (any token holder can propose)
- *  Quorum:               40% of total supply
+ *  Quorum:               100% of total supply (both 50% members participate)
  */
 contract CouncilGovernor is
     Governor,
@@ -34,7 +34,7 @@ contract CouncilGovernor is
         Governor("AgentCouncilGovernor")
         GovernorSettings(75, 50400, 0) // votingDelay=75 blocks (~15min), votingPeriod=50400 (~7 days), proposalThreshold=0
         GovernorVotes(token_)
-        GovernorVotesQuorumFraction(40) // 40%
+        GovernorVotesQuorumFraction(100) // both members must participate
         GovernorTimelockControl(timelock_)
     {}
 
@@ -59,6 +59,20 @@ contract CouncilGovernor is
         returns (uint256)
     {
         return super.quorum(blockNumber);
+    }
+
+    /**
+     * @dev The two-member council requires unanimous affirmative voting power.
+     *      Abstentions count toward participation but never substitute for a YES.
+     */
+    function _voteSucceeded(uint256 proposalId)
+        internal
+        view
+        override(Governor, GovernorCountingSimple)
+        returns (bool)
+    {
+        (, uint256 forVotes,) = proposalVotes(proposalId);
+        return forVotes == token().getPastTotalSupply(proposalSnapshot(proposalId));
     }
 
     function state(uint256 proposalId)

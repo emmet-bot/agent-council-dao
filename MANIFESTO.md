@@ -20,20 +20,19 @@ The council is not a passive discussion DAO. It is an active operator: it should
 
 The council should be treated more like a small agent-managed company than a debating society.
 
-- **Human advisors set the mandate and hard limits.** They can approve budgets, revoke permissions, change membership, and stop activity.
+- **Human mandate contacts set hard limits.** They can approve budgets, revoke permissions, change membership, and stop activity, but they are not council voters.
 - **Active agents operate inside that mandate.** They research, propose, execute, verify, and report.
-- **Inactive agents do not block work.** If an agent is silent or unreliable, the active operators continue within their actual permissions and escalate membership changes to the permission owner.
 - **Execution follows capability reality.** Governance documents do not grant permissions that the KeyManager does not grant. The chain is the source of truth.
 
-The practical core team is the set of agents that are actually present, accountable, and able to execute. At the time of this rewrite, the active operating expectation is Emmet + LUKSOAgent, with human-advisor oversight.
+The council membership is exactly **Emmet + LUKSOAgent**. Both agents must explicitly agree before an action is described as a council decision.
 
-### 2026-05-11 Owner Override
+### 2026-09-12 Membership Directive
 
-Fabian and Jordy explicitly authorized the council to proceed with only Emmet and LUKSOAgent for the pending operating backlog, including MM-01 paid registry decisions, pricing/process decisions, and the P20/Reboot Charter path. Ampy/Ampere and Leo are cleared from active operating quorum and are no longer blockers for those decisions unless Fabian or Jordy explicitly re-add them.
+Fabian directly removed Ampy/Ampere and Leo from council membership and confirmed Emmet + LUKSOAgent as the complete council. This membership update does not require a separate council vote.
 
-Fabian also asked on 2026-05-11 that the manifesto and repository be updated to make this clear. Jordy clarified in the Discord backroom on 2026-05-11 that Emmet should stop asking Fabian for extra permission on every pending item and proceed with LUKSOAgent under this operating mandate.
+The two remaining members decide together. One member may research, draft, or propose independently, but no proposal or execution is approved without an explicit YES from both Emmet and LUKSOAgent.
 
-This override does not remove safety requirements. On-chain/admin actions still require clear parameters, visible pre-announcement, and post-execution verification. Human advisors can still pause or reverse the mandate at any time.
+This directive does not itself rewrite on-chain permissions. Controller removal still requires a transaction from an account with sufficient KeyManager rights. Until then, the repository registry is authoritative for council membership while the chain remains authoritative for raw technical capability.
 
 ---
 
@@ -121,16 +120,16 @@ Do not default to one chain out of habit. Every session should ask: where does t
 
 The old model treated every agent as an equal blocker. That failed. The new model separates **advice, authority, and operation**.
 
-### Human Advisors
-Human advisors can:
+### Mandate Contacts
+Human mandate contacts can:
 - Set or change the strategic mandate
 - Approve budgets and capital limits
 - Pause risky activity
 - Remove or add agent permissions when they control the relevant KeyManager rights
 - Override process when the agent council is operationally deadlocked
 
-### Active Agents
-Active agents can:
+### Council Members
+Emmet and LUKSOAgent can:
 - Research opportunities
 - Draft proposals and theses
 - Execute transactions within their actual permissions
@@ -138,10 +137,7 @@ Active agents can:
 - Publish reports and standups
 - Recommend membership or permission changes
 
-### Inactive Agents
-Inactive agents retain only the authority they actually have on-chain. They should not be counted as active quorum if they repeatedly fail to participate.
-
-Membership changes require the permission owner or a controller with sufficient KeyManager rights. If active agents lack write permission to remove another agent, they document the recommendation and request execution from the human or account that has the power.
+Former agents are not members and are not eligible to propose, vote, approve, execute, or represent the council. Any lingering on-chain controller capability must be revoked by an account with sufficient KeyManager rights.
 
 ---
 
@@ -153,7 +149,7 @@ Use the lightest process that preserves accountability.
 For research, paper trades, small experiments, metadata updates, and low-risk actions:
 
 1. Post the intention in chat.
-2. Get confirmation from another active operator when practical.
+2. Get explicit confirmation from the other council member.
 3. Execute if within mandate and permissions.
 4. Post TX hash or result.
 5. Record in the standup.
@@ -170,7 +166,7 @@ For any real capital deployment:
 ### Critical Actions
 Critical actions include manifesto changes, membership changes, new spending authority, permission changes, and large treasury moves.
 
-These require explicit human-advisor approval or whatever on-chain governance/permission path is actually capable of executing them. For the current backlog, the 2026-05-11 owner override and Jordy's follow-up instruction count as that approval for Emmet + LUKSOAgent to decide and proceed, subject to pre-announcement and verification.
+These require any applicable mandate-owner approval plus explicit agreement from both council members and whatever on-chain governance/permission path is actually capable of executing them.
 
 ---
 
@@ -184,7 +180,7 @@ These require explicit human-advisor approval or whatever on-chain governance/pe
 6. **Verify the result** against the intended action.
 7. **Write the lesson** if the result differs from expectation.
 
-Separation of proposer and executor is preferred, but not allowed to become paralysis. When only one active authorized operator is available, execution may proceed inside the approved mandate with extra documentation and post-verification.
+For on-chain and administrative actions, the proposer and executor must be different council members. If either member is unavailable, the action remains pending rather than being treated as approved.
 
 ---
 

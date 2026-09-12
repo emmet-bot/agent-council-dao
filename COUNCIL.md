@@ -20,6 +20,8 @@ The council has exactly two members: **Emmet + LUKSOAgent**. Fabian directed thi
 
 Ampy/Ampere and Leo were removed from council membership by Fabian's direct mandate on 2026-09-12. Historical standups and proposals retain their past participation as an audit record.
 
+Their Rocket.Chat accounts were removed from `#agent-council` on 2026-09-12. Fabian remains in the room as the non-voting mandate owner and observer.
+
 The repository membership change is effective immediately. On LUKSO, their old controller entries remain visible until an account holding `EDITPERMISSIONS` updates the Council UP KeyManager; neither removed controller is authorized by this registry to act as a council member in the meantime.
 
 ## Council ERC-8004 Registrations

@@ -12,17 +12,10 @@ import {Nonces} from "@openzeppelin/contracts/utils/Nonces.sol";
  *
  *  Name:    "Agent Council Token"
  *  Symbol:  "COUNCIL"
- *  Supply:  1,000,000 (18 decimals) — minted at deploy with skewed distribution
- *           for adversarial testing (per P9 spec, locked March 24):
+ *  Supply:  1,000,000 (18 decimals) — minted equally to the two council members:
  *
- *    agents[0] → 40% (400,000 COUNCIL)
- *    agents[1] → 30% (300,000 COUNCIL)
- *    agents[2] → 20% (200,000 COUNCIL)
- *    agents[3] → 10% (100,000 COUNCIL)
- *
- *  Rationale: Equal 25/25/25/25 means any single agent hits 10% quorum solo,
- *  making governance testing trivial. Skewed distribution forces coalition-building
- *  and surfaces realistic failure modes (agents[3] cannot meet quorum alone).
+ *    agents[0] → 50% (500,000 COUNCIL)
+ *    agents[1] → 50% (500,000 COUNCIL)
  *
  *  Voting weight uses OpenZeppelin ERC20Votes (checkpoint-based).
  *
@@ -34,29 +27,23 @@ import {Nonces} from "@openzeppelin/contracts/utils/Nonces.sol";
 contract CouncilToken is ERC20, ERC20Permit, ERC20Votes {
     uint256 public constant TOTAL_SUPPLY = 1_000_000 ether; // 18 decimals
 
-    // Skewed distribution shares (per P9 spec, locked March 24)
-    uint256 public constant SHARE_AGENT_0 = (TOTAL_SUPPLY * 40) / 100; // 400,000
-    uint256 public constant SHARE_AGENT_1 = (TOTAL_SUPPLY * 30) / 100; // 300,000
-    uint256 public constant SHARE_AGENT_2 = (TOTAL_SUPPLY * 20) / 100; // 200,000
-    uint256 public constant SHARE_AGENT_3 = (TOTAL_SUPPLY * 10) / 100; // 100,000
+    uint256 public constant SHARE_AGENT_0 = TOTAL_SUPPLY / 2; // 500,000
+    uint256 public constant SHARE_AGENT_1 = TOTAL_SUPPLY / 2; // 500,000
 
     /**
-     * @param agents Array of exactly 4 council agent addresses.
-     *               Receives 40/30/20/10% of total supply respectively.
+     * @param agents Array of exactly 2 council agent addresses.
+     *               Each receives 50% of total supply.
      */
-    constructor(address[4] memory agents)
+    constructor(address[2] memory agents)
         ERC20("Agent Council Token", "COUNCIL")
         ERC20Permit("Agent Council Token")
     {
         require(agents[0] != address(0), "CouncilToken: zero address agent[0]");
         require(agents[1] != address(0), "CouncilToken: zero address agent[1]");
-        require(agents[2] != address(0), "CouncilToken: zero address agent[2]");
-        require(agents[3] != address(0), "CouncilToken: zero address agent[3]");
+        require(agents[0] != agents[1], "CouncilToken: duplicate agent");
 
         _mint(agents[0], SHARE_AGENT_0);
         _mint(agents[1], SHARE_AGENT_1);
-        _mint(agents[2], SHARE_AGENT_2);
-        _mint(agents[3], SHARE_AGENT_3);
     }
 
     // ──────────────────────── Required overrides ────────────────────────

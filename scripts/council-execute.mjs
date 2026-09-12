@@ -113,8 +113,6 @@ async function findAgentUP(controllerAddress, provider) {
   const AGENT_UPS = [
     '0x1089E1c613Db8Cb91db72be4818632153E62557a', // Emmet
     '0x293E96ebbf264ed7715cff2b67850517De70232a', // LUKSOAgent
-    '0x1e0267B7e88B97d5037e410bdC61D105e04ca02A', // Leo
-    '0xDb4DAD79d8508656C6176408B25BEAd5d383E450', // Ampy
   ];
 
   const abi = ['function getData(bytes32) view returns (bytes)'];

@@ -7,16 +7,12 @@
 ```solidity
 agents[] = [
   0x293E96ebbf264ed7715cff2b67850517De70232a,  // LUKSO Agent
-  0x1089E1c613Db8Cb91db72be4818632153E62557a,  // Emmet
-  0x1e0267B7e88B97d5037e410bdC61D105e04ca02A,  // Leo
-  0xDb4DAD79d8508656C6176408B25BEAd5d383E450   // Ampy
+  0x1089E1c613Db8Cb91db72be4818632153E62557a   // Emmet
 ]
 
 initialBalances[] = [
-  400_000 * 10**18,  // LUKSO Agent: 400k
-  300_000 * 10**18,  // Emmet: 300k
-  200_000 * 10**18,  // Leo: 200k
-  100_000 * 10**18   // Ampy: 100k
+  500_000 * 10**18,  // LUKSO Agent: 500k
+  500_000 * 10**18   // Emmet: 500k
 ]
 ```
 
@@ -28,7 +24,7 @@ initialBalances[] = [
 votingDelay = 75 blocks           // ~10 minutes (8s blocks)
 votingPeriod = 50_400 blocks      // ~4.67 days (8s blocks)
 proposalThreshold = 0             // Any token holder can propose
-quorumNumerator = 40              // 40% quorum required
+quorumNumerator = 100             // both 50% members must participate
 ```
 
 ### Timelock Parameters
@@ -40,14 +36,9 @@ executors = [0x0]                 // Anyone can execute after delay
 admin = 0x0                       // No admin (self-governed)
 ```
 
-### Ratification
+### Membership Directive
 
-- **LUKSOAgent:** Approve (verbal + grid tile confirmed)
-- **Emmet:** Approve
-- **Ampy:** Approve
-- **Leo:** Pending formal vote (verbal agreement on record)
-
-**Status:** 3/4 ratified. Deploy proceeds with Leo's verbal agreement locked.
+Fabian set the council membership to Emmet + LUKSOAgent on 2026-09-12. This direct mandate-owner change did not require a separate council vote. Any future deployment must use only the two addresses above.
 
 ---
 

@@ -19,8 +19,8 @@ const ERC8004_REGISTRY = '0x8004A169FB4a3325136EB29fA0ceB6D2e539a432';
 const KNOWN_AGENTS = {
   '0x1089e1c613db8cb91db72be4818632153e62557a': 'Emmet',
   '0x293e96ebbf264ed7715cff2b67850517de70232a': 'LUKSOAgent',
-  '0x1e0267b7e88b97d5037e410bdc61d105e04ca02a': 'Leo',
-  '0xdb4dad79d8508656c6176408b25bead5d383e450': 'Ampy',
+  '0x1e0267b7e88b97d5037e410bdc61d105e04ca02a': 'Former member (removed 2026-09-12)',
+  '0xdb4dad79d8508656c6176408b25bead5d383e450': 'Former member (removed 2026-09-12)',
   '0x7870c5b8bc9572a8001c3f96f7ff59961b23500d': 'Deployer/Fabian?',
   '0x9155b15e2165265d3cc5e1419a58b6115131c631': 'Unknown',
   '0xcdec110f9c255357e37f46cd2687be1f7e9b02f7': 'Fabian UP',

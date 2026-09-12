@@ -21,7 +21,7 @@ interface ILSP1UniversalReceiver {
  *  Name:    "Agent Council Token"
  *  Symbol:  "COUNCIL"
  *  Supply:  1,000,000 (18 decimals) — minted at deploy with skewed distribution:
- *           40% agent1, 30% agent2, 20% agent3, 10% agent4
+ *           50% to each of the two current council members
  *
  *  Architecture:
  *  - OZ v5 Votes base → IVotes/IERC5805 → plugs directly into GovernorVotes
@@ -94,10 +94,8 @@ contract CouncilTokenLSP7 is Votes, IERC165 {
 
     uint256 public constant TOTAL_SUPPLY = 1_000_000 ether;
 
-    uint256 public constant SHARE_AGENT_1 = (TOTAL_SUPPLY * 40) / 100; // 400,000
-    uint256 public constant SHARE_AGENT_2 = (TOTAL_SUPPLY * 30) / 100; // 300,000
-    uint256 public constant SHARE_AGENT_3 = (TOTAL_SUPPLY * 20) / 100; // 200,000
-    uint256 public constant SHARE_AGENT_4 = (TOTAL_SUPPLY * 10) / 100; // 100,000
+    uint256 public constant SHARE_AGENT_1 = TOTAL_SUPPLY / 2; // 500,000
+    uint256 public constant SHARE_AGENT_2 = TOTAL_SUPPLY / 2; // 500,000
 
     /// @dev LSP7DigitalAsset interface ID
     bytes4 private constant _INTERFACE_ID_LSP7 = 0x05519512;
@@ -132,23 +130,20 @@ contract CouncilTokenLSP7 is Votes, IERC165 {
     // ──────────────────────── Constructor ────────────────────────
 
     /**
-     * @param agents Array of exactly 4 council agent addresses.
-     *               Receives 40/30/20/10% of COUNCIL tokens respectively.
+     * @param agents Array of exactly 2 council agent addresses.
+     *               Each receives 50% of COUNCIL tokens.
      */
-    constructor(address[4] memory agents) EIP712("Agent Council Token", "1") {
+    constructor(address[2] memory agents) EIP712("Agent Council Token", "1") {
         _name = "Agent Council Token";
         _symbol = "COUNCIL";
         _owner = msg.sender;
 
         // H-03: Prevent duplicate agents
-        if (
-            agents[0] == agents[1] || agents[0] == agents[2] || agents[0] == agents[3]
-                || agents[1] == agents[2] || agents[1] == agents[3] || agents[2] == agents[3]
-        ) revert DuplicateAgentAddress();
+        if (agents[0] == agents[1]) revert DuplicateAgentAddress();
 
-        uint256[4] memory shares = [SHARE_AGENT_1, SHARE_AGENT_2, SHARE_AGENT_3, SHARE_AGENT_4];
+        uint256[2] memory shares = [SHARE_AGENT_1, SHARE_AGENT_2];
 
-        for (uint256 i = 0; i < 4; i++) {
+        for (uint256 i = 0; i < 2; i++) {
             require(agents[i] != address(0), "CouncilToken: zero address agent");
             _mint(agents[i], shares[i]);
         }
@@ -156,8 +151,6 @@ contract CouncilTokenLSP7 is Votes, IERC165 {
         // H-01: Auto-delegate so voting power is active immediately
         _delegate(agents[0], agents[0]);
         _delegate(agents[1], agents[1]);
-        _delegate(agents[2], agents[2]);
-        _delegate(agents[3], agents[3]);
     }
 
     // ──────────────────────── LSP7 View Functions ────────────────────────

@@ -1,0 +1,1 @@
+{"case":"U2","controllerEnumeration":null,"failures":[{"method":"supportsInterface","rawRevertData":"0x","rpcError":null},{"method":"getData","rawRevertData":"0x","rpcError":null}],"permissions":null,"provenance":"synthetic","rawCode":"0x60006000fd","status":"unsupported-or-unreadable"}

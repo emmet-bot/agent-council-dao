@@ -1,0 +1,1 @@
+R1 | synthetic | configured-restrictions | CALL,SETDATA | CALL:target=0x2222222222222222222222222222222222222222,interface=0xffffffff,selector=0x12345678 | dataKeyPrefix=0xaabbccdd | enumerationExhaustive=false | safeVerdict=unavailable

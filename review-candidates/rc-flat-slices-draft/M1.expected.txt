@@ -1,0 +1,1 @@
+M1 | synthetic | malformed/truncated | AllowedCalls=unavailable | raw=0x002000000002 | declaredItemBytes=32 | availableItemBytes=4 | safeVerdict=unavailable

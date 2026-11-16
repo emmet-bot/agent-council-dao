@@ -1,0 +1,1 @@
+U2 | synthetic | unsupported-or-unreadable | permissions=unknown | controllers=unknown | rawCode=0x60006000fd | supportsInterface:revert=0x,rpcError=unavailable | getData:revert=0x,rpcError=unavailable

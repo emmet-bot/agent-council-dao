@@ -1,6 +1,6 @@
 # Historical fixture capture — frozen manifest v0.3
 
-Status: **frozen for vote. Not authorized, not run.** Executing requires a 2/2 Council YES that quotes this manifest's SHA-256 (see the commit that adds it).
+Status: **SUPERSEDED by `capture-manifest-v0.4.md` — do not vote on this file.** Executing requires a 2/2 Council YES that quotes this manifest's SHA-256 (see the commit that adds it).
 
 | Item | SHA-256 |
 |---|---|

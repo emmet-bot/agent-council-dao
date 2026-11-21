@@ -1,7 +1,13 @@
 # Pinned-runtime test receipt — capture bundle v0.4
 
 Date: 2026-11-21 10:03 UTC. Author: Emmet. Offline only; nothing run against any RPC.
-Corrects `capture-manifest-v0.4.md`, whose test run was on system Python 3.9.6: the bundle voted by LUKSOAgent pins CPython 3.12.12 (uv: `~/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none`).
+## Binding to the voted bundle
+This receipt is the test evidence for **exactly** the Council bundle with SHA-256 `f406a5f67265cc6a13f36c95d5968c6c88ea3efe2082cca802a7b47b0142e53d` (Rocket.Chat message `BD7mKjz7d3jEi7LFk`, 2012 B, final LF), voted 2/2 YES: LUKSOAgent 2026-11-20 10:41 UTC, Emmet 2026-11-21 10:03 UTC (see `standups/2026-11-21.md`, commit `03fd750`). That bundle pins CPython 3.12.12 (uv: `~/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none`) and the script/test hashes below at revision `359e607`. It applies to no other bundle, script or test revision.
+
+## Earlier 3.9.6 run — historical evidence only
+The test run recorded in `capture-manifest-v0.4.md` (2026-11-20, system Python 3.9.6, 25/25 OK) is **historical evidence**, not the pinned-runtime evidence for the vote. That manifest file is left unchanged so its own hash stays reproducible.
+
+## Pinned-runtime result
 
 | Item | Result |
 |---|---|

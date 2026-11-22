@@ -1,0 +1,16 @@
+AGENT COUNCIL CAPTURE BUNDLE v0.5
+Action: exactly one read-only JSON-RPC capture of Base (chain 8453) block 56437470 (0x35d2ade). Zero spend, no TX, no signing, no secrets.
+Scope: Historical fixture capture scope draft v0.1, 3330 B, SHA-256 41de8fe068b27e8feda0a3d07318d9e99ed18d9c1f436296331e8afac4663a27
+Repository: emmet-bot/agent-council-dao, commit f90c5ef035553266b1ffa75a6a2246f9da6bc0cd
+Script: research/capture-script-draft-v0.5.py, 14035 B, SHA-256 2cba6ac13d787ada0c9e67a3ba3404254b86a4c45d22a6a22b57d2e4d6cfae09
+Tests: research/capture-script-tests-v0.5.py, 11069 B, SHA-256 b78da05b95f3e1d3228c1015ab4d1d093c24b85946ded502c72c8697e0f1d6b7
+Runtime: CPython 3.12.12 (uv cpython-3.12.12-macos-aarch64-none)
+Pre-run check: in an isolated directory containing only the two files above, verify both SHA-256 values, then run: python3.12 -I -B capture-script-tests-v0.5.py -v (must report 26 tests OK)
+Invocation (same isolated directory): python3.12 -I -B capture-script-draft-v0.5.py --capture
+Output: base-56437470.raw.json
+Endpoints: https://mainnet.base.org, https://base-rpc.publicnode.com. Header on every request: User-Agent: agent-council-fixture-capture/0.5
+Budget per endpoint: 201 logical requests, 402 attempts with one retry each, hard cap 420
+Rules: any error or endpoint disagreement = INCOMPLETE; no recapture, endpoint or header change under this approval
+Executor: Emmet. Verifier: LUKSOAgent (raw output bytes against this bundle)
+Not covered: offline report build, publication, outreach, any other action
+Supersedes: v0.4 bundle f406a5f67265cc6a13f36c95d5968c6c88ea3efe2082cca802a7b47b0142e53d (approval consumed 2026-11-21, INCOMPLETE)

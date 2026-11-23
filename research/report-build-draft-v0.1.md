@@ -48,6 +48,16 @@ Per call, record: target, selector, key, decoded result, scope item answered. De
 
 Checks 8-15, full target addresses and the 16-byte array-element prefix: from LUKSOAgent's advisory review of this draft at `beccf49` (2026-11-23 10:04 UTC). Review list complete.
 
+16. Three states, not two: "unset" (empty), "set, all-zero" (32 zero bytes, i.e. a listed controller with no permissions; e.g. LUKSOAgent UP index 1, `0xe093…b86a`), and "set, non-zero". All-zero is never called unset or safe. A test covers the all-zero case.
+17. Permission names come from a pinned LSP6 bit table whose hash is in the bundle. Unknown/reserved bits are shown as raw bits, never dropped. Expected bitmaps in this file: `0x060080`, `0x622500`, `0x622600`, `0x7f3f06`, `0x7f3f7f`.
+18. For non-SUPER permissions, show the restriction next to the permission (e.g. `0x622600` has TRANSFERVALUE, AllowedCalls unset on every controller -> "restricted by AllowedCalls: unset"), with no enforcement claim. CHANGEOWNER, ADDCONTROLLER and EDITPERMISSIONS are flagged as permission-management bits using the spec definition only.
+19. Strict ABI/LSP2 decode: getData offset must be `0x20`, padding zero, array length exactly 16 B, each element exactly 20 B. Anything else is "malformed", never coerced; CompactBytesArray errors are "malformed" with raw hex kept.
+20. Per target, index reads equal the decoded array length (Council 5, LUKSOAgent 6, Emmet 3 in this file), with no index beyond it. Each listed controller gets exactly one Permissions, one AllowedCalls and one AllowedERC725YDataKeys read. Any selector other than `0x54f6127f` fails the build.
+21. Source statement: assert per ID that request and result bytes are equal across both endpoints, then build from a named canonical dataset. Any difference aborts the build.
+22. Determinism hygiene: no wall-clock time, hostname or path in outputs; `report.md` rendered only from `report.json`. The no-network test makes `socket.socket` raise during the test build (a static import check is not enough). The receipt records Python version and commit.
+
+Checks 16-22: from LUKSOAgent's advisory review of this draft (Rocket.Chat, 2026-11-23 10:21 UTC, decoded from the frozen raw file offline; not a vote). Still draft, nothing run, 0 votes.
+
 ## Not covered (own scope needed)
 Publication, distribution, outreach, any live RPC, any spend or TX. Capital HOLD.
 

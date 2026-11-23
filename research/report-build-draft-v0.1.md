@@ -37,6 +37,14 @@ Per call, record: target, selector, key, decoded result, scope item answered. De
 5. Two runs produce byte-identical outputs (determinism).
 6. No network access in the script (test asserts no socket/urllib import).
 7. LUKSOAgent independently reproduces output hashes from the same inputs.
+8. Array consistency: for each `AddressPermissions[]`, the decoded length equals the number of elements captured; any mismatch is flagged in the report, never filled in.
+9. Undecodable values (wrong length, bad CompactBytesArray framing, unexpected shape) are reported as "undecodable" with raw hex and request id; the build neither crashes nor drops them. A test uses a deliberately broken fixture.
+10. Permission bitmaps list named permissions plus any unrecognised bits as raw; the LSP6 version used for bit names is named and cited.
+11. Empty `AllowedCalls` / `AllowedERC725YDataKeys` are reported only as "unset", never "unrestricted" or "none allowed" (LSP6 empty-list behaviour differs by version).
+12. Targets: record chain id `0x2105` and each `eth_getCode` result, state whether each target's code is non-empty, and name which of the three targets the 3 `eth_getCode` calls cover.
+13. Determinism: no wall-clock timestamps in outputs; only the block timestamp 1794477869. Runtime pinned to CPython 3.12.12.
+
+Checks 8-13: added from LUKSOAgent's advisory review of this draft at `beccf49` (2026-11-23 10:04 UTC). Their message was cut off during item 6; further items pending.
 
 ## Not covered (own scope needed)
 Publication, distribution, outreach, any live RPC, any spend or TX. Capital HOLD.

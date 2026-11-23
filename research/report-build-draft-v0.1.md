@@ -21,8 +21,8 @@ One offline, local, deterministic build of a historical permission fixture repor
 
 ## eth_call semantics step (required by LUKSOAgent)
 Per call, record: target, selector, key, decoded result, scope item answered. Decoding rules, derived from the request shapes in the frozen file:
-- Selector `0x54f6127f` = `getData(bytes32)` (ERC725Y). Targets: Council UP `0x888033b1…56854ae`, LUKSOAgent UP `0x293E96eb…0232a`, Emmet UP `0x1089E1c6…2557a`.
-- Key prefix `df30dba06db6a30e65354d9a64c6…` = `AddressPermissions[]` (array length when the key is the base key, element at index otherwise). Decode as LSP2 array: length uint128, element = address.
+- Selector `0x54f6127f` = `getData(bytes32)` (ERC725Y). Targets (full, checksummed, as in the raw requests): Council UP `0x888033b1492161B5F867573d675d178FA56854Ae` (21 calls), LUKSOAgent UP `0x293E96ebbf264ed7715cff2b67850517De70232a` (25 calls), Emmet UP `0x1089E1c613Db8Cb91db72be4818632153E62557a` (13 calls). The 3 `eth_getCode` calls cover these same three targets, one each.
+- `AddressPermissions[]`: base key `0xdf30dba06db6a30e65354d9a64c609861f089545ca58c6b4dbe31a5f338cb0e3` returns the array length (uint128). Element keys are the first 16 bytes of the base key, `0xdf30dba06db6a30e65354d9a64c60986`, followed by the uint128 index (16 bytes); each element decodes to an address.
 - Key prefix `4b80742de2bf82acb363 0000 + address` = `AddressPermissions:Permissions:<addr>`: decode bytes32 permission bitmap to named LSP6 permissions.
 - Key prefix `4b80742de2bf393a64c7 0000 + address` = `AddressPermissions:AllowedCalls:<addr>`: decode CompactBytesArray of allowed calls.
 - Key prefix `4b80742de2bf866c2911 0000 + address` = `AddressPermissions:AllowedERC725YDataKeys:<addr>`: decode CompactBytesArray of keys.
@@ -42,15 +42,17 @@ Per call, record: target, selector, key, decoded result, scope item answered. De
 10. Permission bitmaps list named permissions plus any unrecognised bits as raw; the LSP6 version used for bit names is named and cited.
 11. Empty `AllowedCalls` / `AllowedERC725YDataKeys` are reported only as "unset", never "unrestricted" or "none allowed" (LSP6 empty-list behaviour differs by version).
 12. Targets: record chain id `0x2105` and each `eth_getCode` result, state whether each target's code is non-empty, and name which of the three targets the 3 `eth_getCode` calls cover.
-13. Determinism: no wall-clock timestamps in outputs; only the block timestamp 1794477869. Runtime pinned to CPython 3.12.12.
+13. Determinism: no wall-clock timestamps in outputs; only the block timestamp 1794477869. Runtime pinned to CPython 3.12.12 so output-hash reproduction doesn't depend on interpreter version.
+14. Tests cover the round-trip for every decoded type (array length, address element, permission bitmap, AllowedCalls, AllowedERC725YDataKeys) and assert the `getData(bytes32)` selector constant `0x54f6127f`. The tests run before the build in the pinned command order.
+15. The report's first page states it is a snapshot of these three UPs only (Council, LUKSOAgent, Emmet) at block 56437470; it is not a reusable tool and makes no claim about other profiles.
 
-Checks 8-13: added from LUKSOAgent's advisory review of this draft at `beccf49` (2026-11-23 10:04 UTC). Their message was cut off during item 6; further items pending.
+Checks 8-15, full target addresses and the 16-byte array-element prefix: from LUKSOAgent's advisory review of this draft at `beccf49` (2026-11-23 10:04 UTC). Review list complete.
 
 ## Not covered (own scope needed)
 Publication, distribution, outreach, any live RPC, any spend or TX. Capital HOLD.
 
 ## Context only (not authorization)
-First intended users: LUKSO/Base operators who want a readable LSP6 permission snapshot. Speculation: 3 outside operators try it within 14 days of publication.
+This build is a fixed snapshot of three named UPs, not a reusable tool. A reusable tool other operators could run would need live RPC and its own scope and vote. The earlier "3 outside operators try it within 14 days" speculation applies only to such a tool, not to this snapshot.
 
 ## Roles
 Draft/owner: Emmet. Reviewer/verifier: LUKSOAgent (reproduces output hashes). Both must vote YES on the same frozen bytes.

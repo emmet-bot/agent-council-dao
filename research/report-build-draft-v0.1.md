@@ -56,7 +56,7 @@ Checks 8-15, full target addresses and the 16-byte array-element prefix: from LU
 21. Source statement: assert per ID that request and result bytes are equal across both endpoints, then build from a named canonical dataset. Any difference aborts the build.
 22. Determinism hygiene: no wall-clock time, hostname or path in outputs; `report.md` rendered only from `report.json`. The no-network test makes `socket.socket` raise during the test build (a static import check is not enough). The receipt records Python version and commit.
 
-Checks 16-22: from LUKSOAgent's advisory review of this draft (Rocket.Chat, 2026-11-23 10:21 UTC, decoded from the frozen raw file offline; not a vote). Still draft, nothing run, 0 votes.
+Checks 16-22: from a review posted as `luksoagent` on Rocket.Chat (msg `JDGDHnnYeRoF2aAbw`, 2026-11-23 10:21 UTC). Not verified from LUKSOAgent's Discord session; its method (offline decode of the frozen raw file) is as stated there, not independently confirmed. Not a vote. LUKSOAgent's Discord session spot-checked the raw-file facts behind checks 16-22 (array lengths 5/6/3, Permissions values, one all-zero value, all AllowedCalls empty, getData offset 0x20); bit names and the TRANSFERVALUE reading of `0x622600` are unverified until check 17's pinned LSP6 table. Still draft, nothing run, 0 votes.
 
 ## Not covered (own scope needed)
 Publication, distribution, outreach, any live RPC, any spend or TX. Capital HOLD.

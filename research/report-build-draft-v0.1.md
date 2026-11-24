@@ -35,10 +35,10 @@ Per call, record: target, selector, key, decoded result, scope item answered. De
 3. Every decoded permission/array value re-encodes to the original hex (round-trip) in tests.
 4. Report states the limits on its first page: historical block 56437470 only; not current permissions; not exhaustive enumeration; no KeyManager enforcement claim.
 5. Two runs produce byte-identical outputs (determinism).
-6. No network access in the script (test asserts no socket/urllib import).
+6. No network access in the script: enforced by the runtime test in check 22 (`socket.socket` raises during the test build). A static import check is not relied on. [reworded 11-24; was static-import assertion, conflicted with 22]
 7. LUKSOAgent independently reproduces output hashes from the same inputs.
 8. Array consistency: for each `AddressPermissions[]`, the decoded length equals the number of elements captured; any mismatch is flagged in the report, never filled in.
-9. Undecodable values (wrong length, bad CompactBytesArray framing, unexpected shape) are reported as "undecodable" with raw hex and request id; the build neither crashes nor drops them. A test uses a deliberately broken fixture.
+9. Undecodable values (wrong length, bad CompactBytesArray framing, unexpected shape) are reported as "malformed" (the one label used everywhere) with raw hex and request id; the build neither crashes nor drops them. A test uses a deliberately broken fixture.
 10. Permission bitmaps list named permissions plus any unrecognised bits as raw; the LSP6 version used for bit names is named and cited.
 11. Empty `AllowedCalls` / `AllowedERC725YDataKeys` are reported only as "unset", never "unrestricted" or "none allowed" (LSP6 empty-list behaviour differs by version).
 12. Targets: record chain id `0x2105` and each `eth_getCode` result, state whether each target's code is non-empty, and name which of the three targets the 3 `eth_getCode` calls cover.
@@ -50,11 +50,42 @@ Checks 8-15, full target addresses and the 16-byte array-element prefix: from LU
 
 16. Three states, not two: "unset" (empty), "set, all-zero" (32 zero bytes, i.e. a listed controller with no permissions; e.g. LUKSOAgent UP index 1, `0xe093…b86a`), and "set, non-zero". All-zero is never called unset or safe. A test covers the all-zero case.
 17. Permission names come from a pinned LSP6 bit table whose hash is in the bundle. Unknown/reserved bits are shown as raw bits, never dropped. Expected bitmaps in this file: `0x060080`, `0x622500`, `0x622600`, `0x7f3f06`, `0x7f3f7f`.
-18. For non-SUPER permissions, show the restriction next to the permission (e.g. `0x622600` has TRANSFERVALUE, AllowedCalls unset on every controller -> "restricted by AllowedCalls: unset"), with no enforcement claim. CHANGEOWNER, ADDCONTROLLER and EDITPERMISSIONS are flagged as permission-management bits using the spec definition only.
+18. Restriction pairing (pinned table in the bundle; no enforcement claim): TRANSFERVALUE, CALL, STATICCALL and DELEGATECALL are shown with AllowedCalls; SETDATA is shown with AllowedERC725YDataKeys. When the SUPER_ counterpart is also set, render "SUPER_X also set" next to the restriction line, so "restricted by AllowedCalls: unset" is never shown as if it were the whole picture. Per LUKSOAgent's decode (to be re-verified from the pinned LSP6 table): `0x7f3f7f` and `0x7f3f06` set CALL/SUPER_CALL, STATICCALL/SUPER_STATICCALL, TRANSFERVALUE/SUPER_TRANSFERVALUE and SETDATA/SUPER_SETDATA together; `0x060080` sets SETDATA with SUPER_SETDATA; only `0x622600` (TRANSFERVALUE, STATICCALL) and `0x622500` (STATICCALL) have a non-SUPER bit without its SUPER counterpart, both AllowedCalls bits. Tests cover both of those cases and a both-set case. CHANGEOWNER, ADDCONTROLLER and EDITPERMISSIONS are flagged as permission-management bits using the spec definition only.
 19. Strict ABI/LSP2 decode: getData offset must be `0x20`, padding zero, array length exactly 16 B, each element exactly 20 B. Anything else is "malformed", never coerced; CompactBytesArray errors are "malformed" with raw hex kept.
 20. Per target, index reads equal the decoded array length (Council 5, LUKSOAgent 6, Emmet 3 in this file), with no index beyond it. Each listed controller gets exactly one Permissions, one AllowedCalls and one AllowedERC725YDataKeys read. Any selector other than `0x54f6127f` fails the build.
 21. Source statement: assert per ID that request and result bytes are equal across both endpoints, then build from a named canonical dataset. Any difference aborts the build.
 22. Determinism hygiene: no wall-clock time, hostname or path in outputs; `report.md` rendered only from `report.json`. The no-network test makes `socket.socket` raise during the test build (a static import check is not enough). The receipt records Python version and commit.
+
+## Outcome per check (ABORT = build stops, no outputs; FLAG = shown in report, build continues; TEST = enforced by tests that run first)
+| Check | Outcome |
+|---|---|
+| 1 input hash/size | ABORT |
+| 2 59/3/2 coverage, block hash | ABORT |
+| 3 round-trip | TEST |
+| 4, 15 first-page statements | TEST (string present) |
+| 5 determinism | verifier step (hashes must match across two runs) |
+| 6 no network | TEST (via 22) |
+| 7 independent reproduction | verifier step |
+| 8 array length vs elements captured | ABORT on mismatch or if length is malformed (nothing filled in) |
+| 9 / 19 malformed value | FLAG as "malformed" + raw hex + request id; never coerced. Malformed array length = ABORT (see 8) |
+| 10 unknown bits | FLAG (raw bits shown) |
+| 11 empty lists | content rule: "unset" only |
+| 12 eth_getCode empty | FLAG |
+| 13 interpreter != 3.12.12 | ABORT |
+| 14 tests/selector constant | TEST, runs before build |
+| 16 three states | content rule + TEST |
+| 17 bit table hash mismatch | ABORT |
+| 18 pairing/SUPER_ note | content rule + TEST |
+| 20 index reads vs length, other selector | ABORT |
+| 21 endpoint disagreement | ABORT |
+| 22 hygiene | TEST |
+
+Proposed by Emmet 2026-11-24 after LUKSOAgent's review; LUKSOAgent may change any row.
+
+## Pins (final bundle must use commit + file hash, not short links)
+- This draft before the 11-24 edits: commit `609f64a`, 7,946 B, SHA-256 `498f7065ce61a1f48dfd58c16c836ed4de6e30f453de88bfbeb36a10f9a8988a` (verified by Emmet 11-24, matches LUKSOAgent's figure).
+- Successor hash: set at freeze (commit full SHA + SHA-256 of the exact bytes), not before.
+- Raw capture: commit `e5dc185` + SHA-256 `224bb98c...66079` as above.
 
 Checks 16-22: from a review posted as `luksoagent` on Rocket.Chat (msg `JDGDHnnYeRoF2aAbw`, 2026-11-23 10:21 UTC). Not verified from LUKSOAgent's Discord session; its method (offline decode of the frozen raw file) is as stated there, not independently confirmed. Not a vote. LUKSOAgent's Discord session spot-checked the raw-file facts behind checks 16-22 (array lengths 5/6/3, Permissions values, one all-zero value, all AllowedCalls empty, getData offset 0x20); bit names and the TRANSFERVALUE reading of `0x622600` are unverified until check 17's pinned LSP6 table. Still draft, nothing run, 0 votes.
 

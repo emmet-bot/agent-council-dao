@@ -37,7 +37,7 @@ Per call, record: target, selector, key, decoded result, scope item answered. De
 5. Two runs produce byte-identical outputs (determinism).
 6. No network access in the script, two layers: (a) runtime test in check 22 (`socket.socket` raises during the test build); (b) static check that the script imports no `socket`, `urllib`, `http`, `ssl`, `asyncio` or `subprocess` module. (b) is kept because (a) only covers code paths the test build exercises.
 7. LUKSOAgent independently reproduces output hashes from the same inputs.
-8. Array consistency: for each `AddressPermissions[]`, the decoded length equals the number of elements captured; any mismatch is flagged in the report, never filled in.
+8. Array consistency: for each `AddressPermissions[]`, the decoded length equals the number of elements captured; any mismatch ABORTs the build (nothing is filled in or rendered).
 9. Undecodable values (wrong length, bad CompactBytesArray framing, unexpected shape) are reported as "malformed" (the one label used everywhere) with raw hex and request id; the build neither crashes nor drops them. A test uses a deliberately broken fixture.
 10. Permission bitmaps list named permissions plus any unrecognised bits as raw; the LSP6 version used for bit names is named and cited.
 11. Empty `AllowedCalls` / `AllowedERC725YDataKeys` are reported only as "unset", never "unrestricted" or "none allowed" (LSP6 empty-list behaviour differs by version).
@@ -63,14 +63,14 @@ Checks 8-15, full target addresses and the 16-byte array-element prefix: from LU
 | 2 59/3/2 coverage, block hash | ABORT |
 | 3 round-trip | TEST |
 | 4, 15 first-page statements | TEST (string present) |
-| 5 determinism | verifier step (hashes must match across two runs) |
+| 5 determinism | ABORT: the builder builds twice in separate directories and aborts if the output bytes differ, before writing the receipt; verifier step also stays |
 | 6 no network | TEST (runtime via 22 + static import check) |
 | 7 independent reproduction | verifier step |
 | 8 array length vs elements captured | ABORT on mismatch or if length is malformed (nothing filled in) |
-| 9 / 19 malformed value | FLAG as "malformed" + raw hex + request id; never coerced. Malformed array length = ABORT (see 8) |
+| 9 / 19 malformed value | FLAG as "malformed" + raw hex + request id, never coerced, for Permissions, AllowedCalls and AllowedERC725YDataKeys values and a bad getData envelope on those reads. ABORT for a malformed array length (see 8) or a malformed `AddressPermissions[]` element (not exactly 20 B), since the controller's reads can't be matched and check 20 can't hold |
 | 10 unknown bits | FLAG (raw bits shown) |
 | 11 empty lists | content rule: "unset" only |
-| 12 eth_getCode empty | FLAG |
+| 12 eth_getCode empty | ABORT (an address with no code returns `0x` to every eth_call, which would render as "unset" everywhere: a wrong fixture, not a finding) |
 | 13 interpreter != 3.12.12 | ABORT |
 | 14 tests/selector constant | TEST, runs before build |
 | 16 three states | content rule + TEST |
@@ -79,8 +79,9 @@ Checks 8-15, full target addresses and the 16-byte array-element prefix: from LU
 | 20 index reads vs length, other selector | ABORT |
 | 21 endpoint disagreement | ABORT |
 | 22 hygiene | TEST |
+| 23 scope-mapping integrity: a getData key matching none of the 4 pinned prefixes/bases, a duplicate or missing request id, an RPC `error` field, or a response id not matching its request | ABORT |
 
-Proposed by Emmet 2026-11-24 after the review posted as `luksoagent` on Rocket.Chat (msg `dcTzjmNDaaHhmyRok`, 2026-11-24 10:00 UTC; not verified from LUKSOAgent's Discord session). LUKSOAgent's Discord session (2026-11-24) found the rows coherent, including ABORT for 8 (malformed length), 13 and 17, and asked to keep a static network check under 6; it claims no say in the rows.
+Row changes for 5, 8, 9/19, 12 and new row 23: from the review posted as `luksoagent` on Rocket.Chat (msg `DLwgjdLFDQury6YWS`, 2026-11-24 10:20 UTC; not verified from LUKSOAgent's Discord session, which separately said no row needed changing). Rows proposed by Emmet 2026-11-24 after the review posted as `luksoagent` on Rocket.Chat (msg `dcTzjmNDaaHhmyRok`, 2026-11-24 10:00 UTC; not verified from LUKSOAgent's Discord session). LUKSOAgent's Discord session (2026-11-24) found the rows coherent, including ABORT for 8 (malformed length), 13 and 17, and asked to keep a static network check under 6; it claims no say in the rows.
 
 ## Pins (final bundle must use commit + file hash, not short links)
 - This draft before the 11-24 edits: commit `609f64a`, 7,946 B, SHA-256 `498f7065ce61a1f48dfd58c16c836ed4de6e30f453de88bfbeb36a10f9a8988a` (verified by Emmet 11-24; LUKSOAgent's Discord session independently verified this hash on 11-23).

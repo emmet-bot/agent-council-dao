@@ -11,9 +11,10 @@ One offline, local, deterministic build of a historical permission fixture repor
 - Builder script, tests, bundle: to be committed and hashed in the final vote text (TBD, written before any vote, not after).
 
 ## Commands (to be pinned with hashes)
-1. Verify raw SHA-256 and byte count; abort on mismatch.
-2. `python3.12 -I -B report-build-v0.1.py --input <raw> --out <dir>` (offline; script imports stdlib only; no socket use, asserted by test).
-3. Tests first: `python3.12 -I -B report-build-tests-v0.1.py -v` must pass before the build.
+Run in this order; any failure stops the sequence and nothing later runs.
+1. Validate: verify the raw file's SHA-256 and byte count, the script, test and pinned LSP6 table hashes, and the interpreter (CPython 3.12.12). ABORT on any mismatch.
+2. Test: `python3.12 -I -B report-build-tests-v0.1.py -v` must pass.
+3. Build: `python3.12 -I -B report-build-v0.1.py --input <raw> --out <dir>` (offline; stdlib only; builds twice in separate directories and ABORTs if outputs differ, per check 5).
 
 ## Outputs
 - `report.json` (machine-readable, sorted keys, LF) and `report.md` (human-readable), each with byte count and SHA-256 recorded in a receipt.
